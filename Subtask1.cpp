@@ -178,6 +178,8 @@ int main(int argc, char** argv) {
 
 			setMouseCallback("Original Frame", onMouse, &source_points);
 
+			waitKey(0);
+
 			destroyAllWindows();
 
 			//if (source_points.points.size() < 4) {
