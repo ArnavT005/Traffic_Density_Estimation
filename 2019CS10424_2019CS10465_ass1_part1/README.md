@@ -7,8 +7,8 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - run the command "make" or "make all" (excluding quotes) on the terminal.
   This will compile the C++ code and create the executable file, i.e. main
 - Now execute the file formed using the following format:
-  ./main <IMG1_PATH> <IMG2_PATH> [<SAME_POINTS>{0,1}]
-                                                  (order is important)
+- ./main <IMG1_PATH> <IMG2_PATH> [<SAME_POINTS>{0,1}]
+                                                  __(order is important)__
   Notation used:
   - <IMG1_PATH>, <IMG2_PATH>: T
      These are the absolute/relative paths of the images that need to be 
@@ -18,8 +18,8 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
      the same set of points should be used for both the images, i.e., should
      the set of points selected for first image be used for transforming
      second image as well. This argument should be either 1 or 0.
-     1: Indicates that the same set of points should be used for both images
-     0: Indicates individual selection of points. This is also the default
+     - 1: Indicates that the same set of points should be used for both images
+     - 0: Indicates individual selection of points. This is also the default
         value.
 Note: any value other than 0 or 1 is ignored and the program treats it as
       the default (i.e. 0)
