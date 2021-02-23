@@ -21,4 +21,4 @@ $(NAME): $(NAME).cpp
 
 .PHONY: clean
 clean:
-	rm -f $(NAME) $(TRNSFRM)*.jpg $(CRP)*.jpg
+	rm $(NAME) $(TRNSFRM)*.jpg $(CRP)*.jpg
