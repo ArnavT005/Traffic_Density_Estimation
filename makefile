@@ -1,6 +1,6 @@
 CC = g++
 
-NAME = Subtask1
+NAME = main
 
 STD = -std=c++11
 
