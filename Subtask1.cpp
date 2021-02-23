@@ -14,17 +14,12 @@ void onMouse(int event, int x, int y, int flags, void* data) {
 
 	Points* img_point = (Points*)data;  // retrieving Points pointer from void pointer
 
-	int clicks = 0;
-
 	if (event == EVENT_LBUTTONDOWN) {
 		// user has picked a point
-		clicks++;
 		if (img_point->points.size() < 4) {
 			// only need to take 4 points from user
 			img_point->points.push_back(Point2f(x, y));
 		}
-		if (clicks == 4)
-			return;
 	}
 
 }
@@ -178,6 +173,8 @@ int main(int argc, char** argv) {
 			Points source_points;			// used for storing user inputs (mouse click)
 
 			setMouseCallback("Original Frame", onMouse, &source_points);
+
+			waitKey(0);
 
 			destroyAllWindows();
 
