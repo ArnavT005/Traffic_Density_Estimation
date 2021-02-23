@@ -1,12 +1,24 @@
 CC = g++
-NAME = Subtask1
+
+NAME = main
+
 STD = -std=c++11
-PKG = `pkg-config --cflags --libs opencv`
+
+OPCV = `pkg-config --cflags --libs opencv`
+
 TRNSFRM = Transformed_Image_
+
 CRP = Cropped_Image_
 
-all: $(NAME).cpp
-	$(CC) $(NAME).cpp -o $(NAME) $(STD) $(PKG)
+
+.PHONY: all
+all: $(NAME)
+
+
+$(NAME): $(NAME).cpp
+	$(CC) $(NAME).cpp -o $(NAME) $(STD) $(OPCV)
 	
-.Phony clean:
-	rm -f $(NAME) $(TRNSFRM)1.jpg $(TRNSFRM)2.jpg $(CRP)1.jpg $(CRP)2.jpg
+
+.PHONY: clean
+clean:
+	rm -f $(NAME) $(TRNSFRM)*.jpg $(CRP)*.jpg
