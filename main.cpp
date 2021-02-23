@@ -32,13 +32,13 @@ void onMouse(int event, int x, int y, int flags, void* dataPointer) {
             Point2f xy = (data->points)[data->clickCnt-1];
             data->clickCnt--;
             data->points.pop_back();
-            circle((data->image),Point(xy.x,xy.y),8,Scalar(0,0,0),FILLED);
+            circle((data->image),Point(xy.x,xy.y),6,Scalar(0,0,0),FILLED);
             imshow("Original Frame", data->image);
         }
     }
 }
 
-bool warpAndCrop(int count, String path, vector<Point2f> trnsfrm_points){
+bool warpAndCrop(int count, String path, vector<Point2f> trnsfrm_points, Mat matrix, bool optional){
     
     Mat src_img = imread(path, 0);                  // read image and store it in src_img
     Mat transformed_image, cropped_image;
@@ -66,23 +66,31 @@ bool warpAndCrop(int count, String path, vector<Point2f> trnsfrm_points){
         //dispaly image
         imshow("Original Frame", data.image);
         //user input via mouse
-        setMouseCallback("Original Frame", onMouse, &data);
+        if(!optional){
+            setMouseCallback("Original Frame", onMouse, &data);
 
-        //wait until any key is pressed
-        waitKey(0);
-        //close all windows on key press
-        destroyAllWindows();
+            //wait until any key is pressed
+            waitKey(0);
+            //close all windows on key press
+            destroyAllWindows();
 
-        if (data.points.size() < 4) {
-            //less than 4 point clicks before key press
-            cout << "ERROR: Less than 4 points were selected. Homography cannot be determined\n";
-            cout << "4 points are required. Rerun the code and select 4 points\n";
-            cout << "Refer to README.md for details. \n";
-            return false;
+            if (data.points.size() < 4) {
+                //less than 4 point clicks before key press
+                cout << "ERROR: Less than 4 points were selected. Homography cannot be determined\n";
+                cout << "4 points are required. Rerun the code and select 4 points\n";
+                cout << "Refer to README.md for details. \n";
+                return false;
+            }
+
+            // find a perspective transformation (transformation matrix)
+                matrix = findHomography(data.points, trnsfrm_points);
         }
-
-        // find a perspective transformation (transformation matrix)
-        Mat matrix = findHomography(data.points, trnsfrm_points);
+        else{
+            //wait until any key is pressed
+            waitKey(0);
+            //close all windows on key press
+            destroyAllWindows();
+        }
 
         //transform perspective
         warpPerspective(clone, transformed_image, matrix, size);
@@ -132,8 +140,11 @@ int main(int argc, char** argv) {
         trnsfrm_points.push_back(Point2f(800, 830));       // lower right corner
         trnsfrm_points.push_back(Point2f(800, 52));        // upper right corner
         
-        if(warpAndCrop(1, argv[1], trnsfrm_points) == false){return 0;};
-        if(warpAndCrop(2, argv[2], trnsfrm_points) == false){return 0;};
+        Mat matrix;
+        bool optional = false;
+        if(argc > 3){if(stoi(argv[3])==1){optional=true;}}
+        if(warpAndCrop(1, argv[1], trnsfrm_points, matrix, false) == false){return 0;};
+        if(warpAndCrop(2, argv[2], trnsfrm_points, matrix, optional) == false){return 0;};
         
     }
     
