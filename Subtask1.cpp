@@ -5,6 +5,7 @@ using namespace cv;   // for opencv library constructs
 
 struct Points {
 
+	Mat img;
 	vector<Point2f> points;
 
 };
