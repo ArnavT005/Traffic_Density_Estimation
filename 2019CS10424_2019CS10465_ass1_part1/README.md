@@ -9,7 +9,7 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - Now execute the file formed using the following format:
 - ./main <IMG1_PATH> <IMG2_PATH> [<SAME_POINTS>{0,1}]
                                                   __(order is important)__
-  Notation used:
+- Notation used:
   - <IMG1_PATH>, <IMG2_PATH>: T
      These are the absolute/relative paths of the images that need to be 
      transformed and cropped. Both the arguments are mandatory.
