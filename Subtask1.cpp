@@ -5,6 +5,7 @@ using namespace cv;   // for opencv library constructs
 
 struct Points {
 
+	Mat img;
 	vector<Point2f> points;
 
 };
@@ -72,12 +73,14 @@ int main(int argc, char** argv) {
 
 			size = src_img.size();	// stores the size of the image
 
+			Points source_points;			// used for storing user inputs (mouse click)
+
+			source_points.img = src_img;
+
 			// display image, and accept user input through mouse clicks
 			// first create a window to act as a placeholder
 
-			imshow("Original Frame", src_img);
-
-			Points source_points;			// used for storing user inputs (mouse click)
+			imshow("Original Frame", source_points.img);
 
 			setMouseCallback("Original Frame", onMouse, &source_points);
 
