@@ -13,6 +13,10 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
   - <IMG1_PATH>, <IMG2_PATH>: T
      These are the absolute/relative paths of the images that need to be 
      transformed and cropped. Both the arguments are mandatory.
+     For assignment purpose, preferable choice is:
+	- <IMG1_PATH>: empty.jpg
+	- <IMG2_PATH>: traffic.jpg
+
   - <SAME_POINTS>:
      This argument is optional and it is used to specify whether or not 
      the same set of points should be used for both the images, i.e., should
