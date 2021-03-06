@@ -38,7 +38,7 @@ Mat subImg(Mat frame1, Mat frame2, int thr = 30, int dil = 1) {
         erode(thresh, thresh, kernel5x5);
     }
 
-
+    //thresh represents absolute(frame1 - frame2)
     return thresh;
 
 }
@@ -48,15 +48,16 @@ float contourAndArea(Mat thresh) {
 
     vector<vector<Point>> contour;
     float area = 0;
-
+    
     findContours(thresh, contour, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-
+    
     vector<vector<Point>> hull(contour.size());
 
+    // find convex hulls of contours and store in vector hull 
     for (int i = 0; i < contour.size(); i++) {
         convexHull(contour[i], hull[i]);
     }
-
+    //add area of each hull in the vector hull
     for (int i = 0; i < contour.size(); i++) {
         area += contourArea(hull[i]);
     }
@@ -70,8 +71,9 @@ float contourAndArea(Mat thresh) {
 Mat warpAndCrop(Mat image, Mat matrix) {
     Size size = image.size();
     Mat transformed_image, cropped_image;
-
+    //warp image using matrix
     warpPerspective(image, transformed_image, matrix, size);
+    //crop using preselected points
     cropped_image = transformed_image(Range(52, 831), Range(472, 801));
 
     return cropped_image;
@@ -106,7 +108,7 @@ int main(int argc, char** argv) {
             cout << "Please check if the video path provided is valid or not.\n";
             cout << "Refer to README.md for details. \n\n";
 
-            // unsuccessful job
+            // unsuccessful loading
             return 0;
         }
 
@@ -116,11 +118,13 @@ int main(int argc, char** argv) {
 
         vector<Point2f> source_points, trnsfrm_points;
 
-        source_points.push_back(Point2f(980, 224));
-        source_points.push_back(Point2f(418, 830));
-        source_points.push_back(Point2f(1506, 833));
-        source_points.push_back(Point2f(1290, 211));
-
+        //preselected source points
+        source_points.push_back(Point2f(980, 224));        //top left corner
+        source_points.push_back(Point2f(418, 830));        //bottom left corner
+        source_points.push_back(Point2f(1506, 833));       //bottom right corner
+        source_points.push_back(Point2f(1290, 211));       //top right corner
+    
+        //preselected destination points for homography
         trnsfrm_points.push_back(Point2f(472, 52));        // top left corner
         trnsfrm_points.push_back(Point2f(472, 830));       // bottom left corner
         trnsfrm_points.push_back(Point2f(800, 830));       // bottom right corner
@@ -129,26 +133,28 @@ int main(int argc, char** argv) {
         // used to store homography matrix
         Mat matrix = findHomography(source_points, trnsfrm_points);
 
+        //choose the frame at 173000ms as background(empty road) 
         video.set(CAP_PROP_POS_MSEC, 173000);
 
         video.read(background);
         background = warpAndCrop(background, matrix);
 
         float AREA = 1.2 * background.size().area();
-        float denseQ = 0, denseM = 0;;
+        float denseQ = 0, denseM = 0;
 
         int see_every_n_frame = 3, frame = 1;
 
+        //set video time to 0
         video.set(CAP_PROP_POS_MSEC, 0);
 
-        //Frame 1
+        //read Frame 1
         video.read(frame1);
         frame1 = warpAndCrop(frame1, matrix);
 
 
         while (true) {
 
-            //Frame 2
+            //read Frame 2
             for (int i = 0; i < see_every_n_frame; i++) {
                 video.read(frame2);
                 frame++;
@@ -162,21 +168,24 @@ int main(int argc, char** argv) {
             frame2 = warpAndCrop(frame2, matrix);
 
 
-            //Queue Density
+            //Queue Density - subtract background
             thresh = subImg(background, frame2, 40, 0);
             denseQ = contourAndArea(thresh) / AREA;
             //imshow("Queue Image", thresh);
 
-            //Dynamic DEnsity
+            //Dynamic Density - subtract frame1
             thresh = subImg(frame1, frame2);
             denseM = contourAndArea(thresh) / AREA;
             //imshow("Dynamic Image", thresh);
 
+            //error correction if Queue density < Dynamic density
             denseQ = denseQ > denseM ? denseQ : denseM;
 
             cout << frame << "," << denseQ << "," << denseM << "\n";
 
             //waitKey(30);
+            
+            //update frame1 to frame2 and loop back
             frame1 = frame2;
         }
     }
