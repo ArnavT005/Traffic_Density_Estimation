@@ -53,7 +53,7 @@ float contourAndArea(Mat thresh) {
     
     vector<vector<Point>> hull(contour.size());
 
-    // find convex hulls of contours and store in vector hull 
+    // find convex hulls of contours and store in vector hull
     for (int i = 0; i < contour.size(); i++) {
         convexHull(contour[i], hull[i]);
     }
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
         // used to store homography matrix
         Mat matrix = findHomography(source_points, trnsfrm_points);
 
-        //choose the frame at 173000ms as background(empty road) 
+        //choose the frame at 173000ms as background(empty road)
         video.set(CAP_PROP_POS_MSEC, 173000);
 
         video.read(background);
@@ -143,6 +143,7 @@ int main(int argc, char** argv) {
         float denseQ = 0, denseM = 0;
 
         int see_every_n_frame = 3, frame = 1;
+        if(argc > 2 && stoi(argv[2])>=1 && stoi(argv[2])<=15) see_every_n_frame = int(15 / stoi(argv[2]));
 
         //set video time to 0
         video.set(CAP_PROP_POS_MSEC, 0);
