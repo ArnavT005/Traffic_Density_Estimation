@@ -49,8 +49,10 @@ float contourAndArea(Mat thresh) {
     vector<vector<Point>> contour;
     float area = 0;
     
+    // find all contours
     findContours(thresh, contour, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
     
+    // find convex hulls
     vector<vector<Point>> hull(contour.size());
 
     // find convex hulls of contours and store in vector hull
@@ -87,12 +89,13 @@ int main(int argc, char** argv) {
     // argv is the array of character pointers (storing strings)
     // argv[0] is the executable file
     // argv[1] should contain the relative/absolute path of the video (preferably "trafficvideo.mp4")
-
-    if (argc > 2) {
+    // argv[2] is the optional parameter that represents FPS at which the image must be processed
+    
+    if (argc > 3) {
 
         // extra arguments provided, just a warning
         cout << "WARNING: Extra arguments provided. \n";
-        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <IMG2_PATH>\n";
+        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> [FPS]\n";
         cout << "Refer to README.md for more details. \n\n";
 
     }
@@ -143,7 +146,8 @@ int main(int argc, char** argv) {
         float denseQ = 0, denseM = 0;
 
         int see_every_n_frame = 3, frame = 1;
-        if(argc > 2 && stoi(argv[2])>=1 && stoi(argv[2])<=15) see_every_n_frame = int(15 / stoi(argv[2]));
+
+        if(argc > 2 && stoi(argv[2]) >=1 && stoi(argv[2]) <= 15) see_every_n_frame = int(15 / stoi(argv[2]));
 
         //set video time to 0
         video.set(CAP_PROP_POS_MSEC, 0);
@@ -194,7 +198,7 @@ int main(int argc, char** argv) {
         // argc < 2, so insufficient number of arguments
         cout << "ERROR: Insufficient number of arguments provided. Program terminating! \n";
         cout << "Expected number of arguments: 2, " << "Present: " << argc << ".\n";
-        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH>\n";
+        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> [FPS]\n";
         cout << "Refer to README.md for details. \n\n";
     }
 
