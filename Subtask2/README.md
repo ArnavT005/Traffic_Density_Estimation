@@ -7,7 +7,7 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - run the command "make" or "make all" (excluding quotes) on the terminal.
   This will compile the C++ code and create the executable file, i.e. main
 - Now execute the file formed using the following format:
-- ./main <VID_PATH> [<FPS>]
+- ./main <VID_PATH> [<FPS>{1-15}]
 
 - Notation used:
   - <VID_PATH>: 
