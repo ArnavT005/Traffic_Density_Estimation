@@ -7,7 +7,7 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - run the command "make" or "make all" (excluding quotes) on the terminal.
   This will compile the C++ code and create the executable file, i.e. main
 - Now execute the file formed using the following format:
-- ./main <VID_PATH>
+- ./main <VID_PATH> [<FPS>]
 
 - Notation used:
   - <VID_PATH>: 
@@ -15,6 +15,10 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
      analysed for traffic density estimation. This argument is mandatory.
      For assignment purpose, preferable choice is:
 	- <VID_PATH>: trafficvideo.mp4
+  - <FPS>:
+	 This is the frames per second at which the video must be processed for
+	 density estimation. This argument is optional. Default value is 3 FPS.
+	 (We have used 3 FPS for density estimation purpose)
 
 Note: any argument other than the one described above is ignored by the
       program
