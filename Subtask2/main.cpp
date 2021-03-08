@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
         // Therefore this correction factor is used for density estimation.
         float convex_hull_correction_factor = 1.2;
 
-        float AREA = convex_hull_correction_factor * background.rows() * background.cols();
+        float AREA = convex_hull_correction_factor * background.size().area();
         float denseQ = 0, denseM = 0;
 
         int see_every_n_frame = 3, frame = 1;
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
         if(argc > 2 && stoi(argv[2]) >=1 && stoi(argv[2]) <= 15) see_every_n_frame = int(15 / stoi(argv[2]));
         else if(argc > 2) {
             // not a valid FPS rate
-            cout << "WARNING: Invalid FPS rate. Using default (3 FPS). \n";
+            cout << "WARNING: Invalid FPS rate. Using default (5 FPS). \n";
             cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> [<FPS_VID>{1-15}]\n";
             cout << "Refer to README.md for more details. \n\n";
         }    
