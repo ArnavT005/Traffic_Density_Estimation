@@ -64,7 +64,7 @@ float contourAndArea(Mat thresh) {
         area += contourArea(hull[i]);
     }
 
-    //drawContours(thresh, hull, -1, Scalar(255, 0, 0));
+    //drawContours(thresh, hull, -1, Scalar(255, 255, 255));
 
     return area;
 
@@ -142,7 +142,12 @@ int main(int argc, char** argv) {
         video.read(background);
         background = warpAndCrop(background, matrix);
 
-        float AREA = 1.2 * background.size().area();
+        // making convex hulls is required for accurate traffic estimation (as they correct the contour error (due to some black spaces))
+        // however convex hulls tend to cover some extra area while covering the contour errors
+        // Therefore this correction factor is used for density estimation.
+        float convex_hull_correction_factor = 1.2;
+
+        float AREA = convex_hull_correction_factor * background.size().area();
         float denseQ = 0, denseM = 0;
 
         int see_every_n_frame = 3, frame = 1;
