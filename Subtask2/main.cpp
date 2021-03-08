@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
         // extra arguments provided, just a warning
         cout << "WARNING: Extra arguments provided. \n";
-        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> [FPS]\n";
+        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> [<FPS_VID>{1-15}]\n";
         cout << "Refer to README.md for more details. \n\n";
 
     }
@@ -147,12 +147,18 @@ int main(int argc, char** argv) {
         // Therefore this correction factor is used for density estimation.
         float convex_hull_correction_factor = 1.2;
 
-        float AREA = convex_hull_correction_factor * background.size().area();
+        float AREA = convex_hull_correction_factor * background.rows() * background.cols();
         float denseQ = 0, denseM = 0;
 
         int see_every_n_frame = 3, frame = 1;
 
         if(argc > 2 && stoi(argv[2]) >=1 && stoi(argv[2]) <= 15) see_every_n_frame = int(15 / stoi(argv[2]));
+        else if(argc > 2) {
+            // not a valid FPS rate
+            cout << "WARNING: Invalid FPS rate. Using default (3 FPS). \n";
+            cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> [<FPS_VID>{1-15}]\n";
+            cout << "Refer to README.md for more details. \n\n";
+        }    
 
         //set video time to 0
         video.set(CAP_PROP_POS_MSEC, 0);
@@ -203,7 +209,7 @@ int main(int argc, char** argv) {
         // argc < 2, so insufficient number of arguments
         cout << "ERROR: Insufficient number of arguments provided. Program terminating! \n";
         cout << "Expected number of arguments: 2, " << "Present: " << argc << ".\n";
-        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> [FPS]\n";
+        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> [<FPS_VID>{1-15}]\n";
         cout << "Refer to README.md for details. \n\n";
     }
 
