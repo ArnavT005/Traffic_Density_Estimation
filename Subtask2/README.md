@@ -17,8 +17,8 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 	- <VID_PATH>: trafficvideo.mp4
   - <FPS_VID>:
 	 This is the frames per second at which the video must be processed for
-	 density estimation. This argument is optional. Default value is 3 FPS.
-	 (We have used 3 FPS for density estimation purpose)
+	 density estimation. This argument is optional and should be between 1 and 15. 
+	 Default value is 5 FPS. (We have used 5 FPS for density estimation purpose)
 
 Note: any argument other than the ones described above are ignored by the
       program
