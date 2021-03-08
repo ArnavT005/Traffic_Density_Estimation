@@ -8,7 +8,7 @@ using namespace cv;   // for opencv library constructs
 
 Mat subImg(Mat frame1, Mat frame2, int thr = 30, int dil = 1) {
 
-    Mat diff, thresh, img1, img2, img3;
+    Mat diff, thresh;
 
     //grayscale
     cvtColor(frame1, frame1, COLOR_BGR2GRAY);
