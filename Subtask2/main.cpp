@@ -6,7 +6,7 @@ using namespace std;  // for standard library constructs
 using namespace cv;   // for opencv library constructs
 
 
-Mat subImg(Mat frame1, Mat frame2, int thr = 30, int dil = 1) {
+Mat subImg(Mat frame1, Mat frame2, int thr = 20) {
 
     Mat diff, thresh;
 
@@ -18,7 +18,7 @@ Mat subImg(Mat frame1, Mat frame2, int thr = 30, int dil = 1) {
     cvtColor(frame2, frame2, COLOR_BGR2GRAY);
     GaussianBlur(frame2, frame2, Size(5, 5), 0);
 
-    //frame diff
+    //absolute frame diff
     absdiff(frame1, frame2, diff);
 
     //threshold
@@ -26,45 +26,26 @@ Mat subImg(Mat frame1, Mat frame2, int thr = 30, int dil = 1) {
 
     // DILATE & ERODE
     Mat kernel5x5 = getStructuringElement(MORPH_RECT, Size(5, 5));
-    Mat kernel9x9 = getStructuringElement(MORPH_RECT, Size(9, 9));
-    Mat kernel11x11 = getStructuringElement(MORPH_RECT, Size(11, 11));
+    Mat kernel21x21 = getStructuringElement(MORPH_RECT, Size(21, 21));
 
-    if (dil == 1) {
-        dilate(thresh, thresh, kernel11x11);
-        erode(thresh, thresh, kernel5x5);
-    }
-    else {
-        dilate(thresh, thresh, kernel9x9);
-        erode(thresh, thresh, kernel5x5);
-    }
+    erode(thresh, thresh, kernel5x5);
+    dilate(thresh, thresh, kernel21x21);
 
-    //thresh represents absolute(frame1 - frame2)
     return thresh;
 
 }
 
 
-float contourAndArea(Mat thresh) {
+float findArea(Mat thresh) {
 
-    vector<vector<Point>> contour;
     float area = 0;
-    
-    // find all contours
-    findContours(thresh, contour, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-    
-    // find convex hulls
-    vector<vector<Point>> hull(contour.size());
-
-    // find convex hulls of contours and store in vector hull
-    for (int i = 0; i < contour.size(); i++) {
-        convexHull(contour[i], hull[i]);
+        
+    for (int i = 0; i < thresh.rows; i++) {
+        for (int j = 0; j < thresh.cols; j++) {
+            if (thresh.at<uchar>(i, j) != 0)
+                area = area + 1;
+        }
     }
-    //add area of each hull in the vector hull
-    for (int i = 0; i < contour.size(); i++) {
-        area += contourArea(hull[i]);
-    }
-
-    //drawContours(thresh, hull, -1, Scalar(255, 255, 255));
 
     return area;
 
@@ -142,16 +123,13 @@ int main(int argc, char** argv) {
         video.read(background);
         background = warpAndCrop(background, matrix);
 
-        // making convex hulls is required for accurate traffic estimation (as they correct the contour error (due to some black spaces))
-        // however convex hulls tend to cover some extra area while covering the contour errors
-        // Therefore this correction factor is used for density estimation.
-        float convex_hull_correction_factor = 1.2;
-
-        float AREA = convex_hull_correction_factor * background.size().area();
+        // total image area
+        float AREA = background.size().area();
         float denseQ = 0, denseM = 0;
 
         int see_every_n_frame = 3, frame = 1;
 
+        // set optional FPS
         if(argc > 2 && stoi(argv[2]) >=1 && stoi(argv[2]) <= 15) see_every_n_frame = int(15 / stoi(argv[2]));
         else if(argc > 2) {
             // not a valid FPS rate
@@ -183,23 +161,20 @@ int main(int argc, char** argv) {
 
             frame2 = warpAndCrop(frame2, matrix);
 
-
             //Queue Density - subtract background
-            thresh = subImg(background, frame2, 40, 0);
-            denseQ = contourAndArea(thresh) / AREA;
-            //imshow("Queue Image", thresh);
+            thresh = subImg(background, frame2, 40);
+            denseQ = findArea(thresh) / AREA;
 
             //Dynamic Density - subtract frame1
             thresh = subImg(frame1, frame2);
-            denseM = contourAndArea(thresh) / AREA;
-            //imshow("Dynamic Image", thresh);
+            denseM = findArea(thresh) / AREA;
 
-            //error correction if Queue density < Dynamic density
+            // error correction if Queue density < Dynamic density
+            // slight error occurs due to different threshold values used
+            // when only moving vehicles are present
             denseQ = denseQ > denseM ? denseQ : denseM;
 
             cout << frame << "," << denseQ << "," << denseM << "\n";
-
-            //waitKey(30);
             
             //update frame1 to frame2 and loop back
             frame1 = frame2;
