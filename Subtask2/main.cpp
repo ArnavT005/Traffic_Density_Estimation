@@ -5,6 +5,14 @@
 using namespace std;  // for standard library constructs
 using namespace cv;   // for opencv library constructs
 
+bool isInteger(string str) {
+    int len = str.length();
+    for (int i = 0; i < len; i++) {
+        if (str.at(i) < '0' || str.at(i) > '9')
+            return false;
+    }
+    return true;
+}
 
 Mat subImg(Mat frame1, Mat frame2, int thr = 20) {
 
@@ -130,7 +138,7 @@ int main(int argc, char** argv) {
         int see_every_n_frame = 3, frame = 1;
 
         // set optional FPS
-        if(argc > 2 && stoi(argv[2]) >=1 && stoi(argv[2]) <= 15) see_every_n_frame = int(15 / stoi(argv[2]));
+        if(argc > 2 && isInteger(argv[2]) && stoi(argv[2]) >=1 && stoi(argv[2]) <= 15) see_every_n_frame = int(15 / stoi(argv[2]));
         else if(argc > 2) {
             // not a valid FPS rate
             cout << "WARNING: Invalid FPS rate. Using default (5 FPS). \n";
