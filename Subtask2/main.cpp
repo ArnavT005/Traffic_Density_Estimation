@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
 
         // total image area
         float AREA = background.size().area();
-        float denseQ = 0, denseM = 0;
+        float denseQ = 0, denseM = 0, time;
 
         int see_every_n_frame = 3, frame = 1;
 
@@ -174,7 +174,10 @@ int main(int argc, char** argv) {
             // when only moving vehicles are present
             denseQ = denseQ > denseM ? denseQ : denseM;
 
-            cout << frame << "," << denseQ << "," << denseM << "\n";
+            // video is 15 FPS
+            time = (float)frame / 15; 
+
+            cout << time << "," << denseQ << "," << denseM << "\n";
             
             //update frame1 to frame2 and loop back
             frame1 = frame2;
