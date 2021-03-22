@@ -16,8 +16,10 @@ Mat background, frame1, frame2, diff, thresh, matrix;
 vector<Point2f> source_points, trnsfrm_points;
 
 //fbase = file baseline, f1 = file of method 1 ...
-fstream fbase("Baseline.txt"), f1("M1_subSample.txt"), f2("M2_sparseDense.txt"), f3("M3_reduceResol.txt");
-fstream f4("M4_spatialSplit.txt"), f5("M5_temporalSplit.txt"), futil("UtilityReport.txt");
+ofstream fbase("Baseline.txt"), f1("M1_subSample.txt"), f2("M2_sparseDense.txt"), f3("M3_reduceResol.txt");
+ofstream f4("M4_spatialSplit.txt"), f5("M5_temporalSplit.txt"), futil("UtilityReport.txt");
+ifstream fbase_in("Baseline.txt"), f1_in("M1_subSample.txt"), f2_in("M2_sparseDense.txt"), f3_in("M3_reduceResol.txt");
+ifstream f4_in("M4_spatialSplit.txt"), f5_in("M5_temporalSplit.txt");
 
 //rtbase = runtime baseline, rt1 = runtime of method 1 ...
 //runtime calculation should EXCLUDE file input output!
@@ -77,7 +79,7 @@ Mat warpAndCrop(Mat image, Mat matrix) {
     return cropped_image;
 }
 
-float utility(fstream &f1, fstream &f2){
+float utility(ifstream &f1, ifstream &f2){
     return -1;
 }
 
@@ -188,7 +190,55 @@ void M2_sparseDense(int x){
 }
 
 void M3_reduceResol(int x, int y){
-    
+    // total image area
+    float AREA = background.size().area();
+    float denseQ = 0, denseM = 0, time;
+    int see_every_n_frame = 3, frame = 1;
+
+    //set video time to 0
+    video.set(CAP_PROP_POS_MSEC, 0);
+
+    //read Frame 1
+    video.read(frame1);
+    resize(frame1, frame1, Size(x,y));
+    frame1 = warpAndCrop(frame1, matrix);
+
+    while (true) {
+
+        //read Frame 2
+        for (int i = 0; i < see_every_n_frame; i++) {
+        video.read(frame2);
+        frame++;
+        }
+
+        //Video End
+        if (frame2.empty()) {
+        break;
+        }
+        resize(frame1, frame1, Size(x,y));
+        frame2 = warpAndCrop(frame2, matrix);
+
+        //Queue Density - subtract background
+        thresh = subImg(background, frame2, 40);
+        denseQ = findArea(thresh) / AREA;
+
+        //Dynamic Density - subtract frame1
+        thresh = subImg(frame1, frame2);
+        denseM = findArea(thresh) / AREA;
+
+        // error correction if Queue density < Dynamic density
+        // slight error occurs due to different threshold values used
+        // when only moving vehicles are present
+        denseQ = denseQ > denseM ? denseQ : denseM;
+
+        // video is 15 FPS
+        time = (float)frame / 15;
+
+        fbase << time << "," << denseQ << "," << denseM << "\n";
+                
+        //update frame1 to frame2 and loop back
+        frame1 = frame2;
+    }
 }
 
 void M4_spatialSplit(int x){
@@ -241,21 +291,24 @@ int main() {
     //Print utility report in text file. Print method name | parameter value | utility | time consumed in one line. used for debugging and changes.
     //Then after the above report print comma seperated utility, runtime for final graphing.
     if(testm1){
-        u1 = utility(fbase, f1); futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 <<".\n\tUtility = " << u1 <<". RunTime = " << rt1 << "\n";
+        u1 = utility(fbase_in, f1_in); futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 <<".\n\tUtility = " << u1 <<". RunTime = " << rt1 << "\n";
     }
     if(testm2){
-        u2 = utility(fbase, f2); futil << "Method 2: Sparse/Dense Flow - Type = " << p2 <<".\n\tUtility = " << u2 <<". RunTime = " << rt2 << "\n";
+        u2 = utility(fbase_in, f2_in); futil << "Method 2: Sparse/Dense Flow - Type = " << p2 <<".\n\tUtility = " << u2 <<". RunTime = " << rt2 << "\n";
     }
     if(testm3){
-        u3 = utility(fbase, f3); futil << "Method 3: Reduce Resolution - Resolution = " << p3 <<"x"<< p4 <<".\n\tUtility = " << u3 <<". RunTime = " << rt3 << "\n";
+        u3 = utility(fbase_in, f3_in); futil << "Method 3: Reduce Resolution - Resolution = " << p3 <<"x"<< p4 <<".\n\tUtility = " << u3 <<". RunTime = " << rt3 << "\n";
     }
     if(testm4){
-        u4 = utility(fbase, f4); futil << "Method 4: Spatial Split - No. of frame splits = " << p5 <<".\n\tUtility = " << u4 <<". RunTime = " << rt4 << "\n";
+        u4 = utility(fbase_in, f4_in); futil << "Method 4: Spatial Split - No. of frame splits = " << p5 <<".\n\tUtility = " << u4 <<". RunTime = " << rt4 << "\n";
     }
     if(testm5){
-        u5 = utility(fbase, f5); futil << "Method 5: Temporal Slpit - No. of threads = " << p6 <<".\n\tUtility = " << u5 <<". RunTime = " << rt5 << "\n\n";
+        u5 = utility(fbase_in, f5_in); futil << "Method 5: Temporal Slpit - No. of threads = " << p6 <<".\n\tUtility = " << u5 <<". RunTime = " << rt5 << "\n\n";
     }
     
     //Close all files
     fbase.close();  f1.close();  f2.close();  f3.close();  f4.close();  f5.close();  futil.close();
+    
+    cout<<"Program Executed Successfully\n";
+    return 0;
 }
