@@ -1,9 +1,10 @@
 #include <opencv2/opencv.hpp>
 #include <fstream>
-#include <time.h>
+#include <chrono>
+#include <pthread.h>
 using namespace std;  // for standard library constructs
 using namespace cv;   // for opencv library constructs
-
+using namespace chrono;
 
 //VARIABLES
 
@@ -279,31 +280,32 @@ int main() {
 
     video.read(background);
     background = warpAndCrop(background, matrix);
-
+    clock_t start, end;
     //Write in text-file time | denseQ | denseM | frame number(optional). useful for graphing.
-    baseline();
-    if(testm1) M1_subSample(p1);
-    if(testm2) M2_sparseDense(p2);
-    if(testm3) M3_reduceResol(p3, p4);
-    if(testm4) M4_spatialSplit(p5);
-    if(testm5) M5_temporalSplit(p6);
+                start = clock(); baseline(); end = clock(); rtbase = float(end - start)/CLOCKS_PER_SEC;
+    if(testm1) {start = clock(); M1_subSample(p1); end = clock(); rt1 = float(end - start)/CLOCKS_PER_SEC;}
+    if(testm2) {start = clock(); M2_sparseDense(p2); end = clock(); rt2 = float(end - start)/CLOCKS_PER_SEC;}
+    if(testm3) {start = clock(); M3_reduceResol(p3, p4); end = clock(); rt3 = float(end - start)/CLOCKS_PER_SEC;}
+    if(testm4) {start = clock(); M4_spatialSplit(p5); end = clock(); rt4 = float(end - start)/CLOCKS_PER_SEC;}
+    if(testm5) {start = clock(); M5_temporalSplit(p6); end = clock(); rt5 = float(end - start)/CLOCKS_PER_SEC;}
     
     //Print utility report in text file. Print method name | parameter value | utility | time consumed in one line. used for debugging and changes.
     //Then after the above report print comma seperated utility, runtime for final graphing.
+    futil << "Baseline RunTime = " << rtbase <<" secs\n";
     if(testm1){
-        u1 = utility(fbase_in, f1_in); futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 <<".\n\tUtility = " << u1 <<". RunTime = " << rt1 << "\n";
+        u1 = utility(fbase_in, f1_in); futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 <<".\n\tUtility = " << u1 <<". RunTime = " << rt1 << " secs\n";
     }
     if(testm2){
-        u2 = utility(fbase_in, f2_in); futil << "Method 2: Sparse/Dense Flow - Type = " << p2 <<".\n\tUtility = " << u2 <<". RunTime = " << rt2 << "\n";
+        u2 = utility(fbase_in, f2_in); futil << "Method 2: Sparse/Dense Flow - Type = " << p2 <<".\n\tUtility = " << u2 <<". RunTime = " << rt2 << " secs\n";
     }
     if(testm3){
-        u3 = utility(fbase_in, f3_in); futil << "Method 3: Reduce Resolution - Resolution = " << p3 <<"x"<< p4 <<".\n\tUtility = " << u3 <<". RunTime = " << rt3 << "\n";
+        u3 = utility(fbase_in, f3_in); futil << "Method 3: Reduce Resolution - Resolution = " << p3 <<"x"<< p4 <<".\n\tUtility = " << u3 <<". RunTime = " << rt3 << " secs\n";
     }
     if(testm4){
-        u4 = utility(fbase_in, f4_in); futil << "Method 4: Spatial Split - No. of frame splits = " << p5 <<".\n\tUtility = " << u4 <<". RunTime = " << rt4 << "\n";
+        u4 = utility(fbase_in, f4_in); futil << "Method 4: Spatial Split - No. of frame splits = " << p5 <<".\n\tUtility = " << u4 <<". RunTime = " << rt4 << " secs\n";
     }
     if(testm5){
-        u5 = utility(fbase_in, f5_in); futil << "Method 5: Temporal Slpit - No. of threads = " << p6 <<".\n\tUtility = " << u5 <<". RunTime = " << rt5 << "\n\n";
+        u5 = utility(fbase_in, f5_in); futil << "Method 5: Temporal Slpit - No. of threads = " << p6 <<".\n\tUtility = " << u5 <<". RunTime = " << rt5 << " secs\n\n";
     }
     
     //Close all files
