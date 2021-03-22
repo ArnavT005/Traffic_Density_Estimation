@@ -5,7 +5,27 @@ using namespace std;  // for standard library constructs
 using namespace cv;   // for opencv library constructs
 
 
+//VARIABLES
+
+
 string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
+VideoCapture video(vid_path);
+
+Mat background, frame1, frame2, diff, thresh, matrix;
+
+vector<Point2f> source_points, trnsfrm_points;
+
+//fbase = file baseline, f1 = file of method 1 ...
+fstream fbase("Baseline.txt"), f1("M1_subSample.txt"), f2("M2_sparseDense.txt"), f3("M3_reduceResol.txt");
+fstream f4("M4_spatialSplit.txt"), f5("M5_temporalSplit.txt"), futil("UtilityReport.txt");
+
+//rtbase = runtime baseline, rt1 = runtime of method 1 ...
+//runtime calculation should EXCLUDE file input output!
+float rtbase, rt1, rt2, rt3, rt4, rt5;
+
+
+//FUNCTIONS
+
 
 Mat subImg(Mat frame1, Mat frame2, int thr = 20) {
 
@@ -57,37 +77,127 @@ Mat warpAndCrop(Mat image, Mat matrix) {
     return cropped_image;
 }
 
-
 float utility(fstream &f1, fstream &f2){
     return -1;
 }
-void baseline(){
 
+void baseline(){
+    // total image area
+    float AREA = background.size().area();
+    float denseQ = 0, denseM = 0, time;
+    int see_every_n_frame = 3, frame = 1;
+
+    //set video time to 0
+    video.set(CAP_PROP_POS_MSEC, 0);
+
+    //read Frame 1
+    video.read(frame1);
+    frame1 = warpAndCrop(frame1, matrix);
+
+    while (true) {
+
+        //read Frame 2
+        for (int i = 0; i < see_every_n_frame; i++) {
+        video.read(frame2);
+        frame++;
+        }
+
+        //Video End
+        if (frame2.empty()) {
+        break;
+        }
+
+        frame2 = warpAndCrop(frame2, matrix);
+
+        //Queue Density - subtract background
+        thresh = subImg(background, frame2, 40);
+        denseQ = findArea(thresh) / AREA;
+
+        //Dynamic Density - subtract frame1
+        thresh = subImg(frame1, frame2);
+        denseM = findArea(thresh) / AREA;
+
+        // error correction if Queue density < Dynamic density
+        // slight error occurs due to different threshold values used
+        // when only moving vehicles are present
+        denseQ = denseQ > denseM ? denseQ : denseM;
+
+        // video is 15 FPS
+        time = (float)frame / 15;
+
+        fbase << time << "," << denseQ << "," << denseM << "\n";
+                
+        //update frame1 to frame2 and loop back
+        frame1 = frame2;
+    }
 }
+
 void M1_subSample(int x){
-    
+    // total image area
+    float AREA = background.size().area();
+    float denseQ = 0, denseM = 0, time;
+    int see_every_n_frame = x, frame = 1;
+
+    //set video time to 0
+    video.set(CAP_PROP_POS_MSEC, 0);
+
+    //read Frame 1
+    video.read(frame1);
+    frame1 = warpAndCrop(frame1, matrix);
+
+    while (true) {
+
+        //read Frame 2
+        for (int i = 0; i < see_every_n_frame; i++) {
+        video.read(frame2);
+        frame++;
+        }
+
+        //Video End
+        if (frame2.empty()) {
+        break;
+        }
+
+        frame2 = warpAndCrop(frame2, matrix);
+
+        //Queue Density - subtract background
+        thresh = subImg(background, frame2, 40);
+        denseQ = findArea(thresh) / AREA;
+
+        //Dynamic Density - subtract frame1
+        thresh = subImg(frame1, frame2);
+        denseM = findArea(thresh) / AREA;
+
+        // error correction if Queue density < Dynamic density
+        // slight error occurs due to different threshold values used
+        // when only moving vehicles are present
+        denseQ = denseQ > denseM ? denseQ : denseM;
+
+        // video is 15 FPS
+        time = (float)frame / 15;
+
+        f1 << time << "," << denseQ << "," << denseM << "\n";
+                
+        //update frame1 to frame2 and loop back
+        frame1 = frame2;
+    }
 }
+
 void M2_sparseDense(int x){
     
 }
+
 void M3_reduceResol(int x, int y){
     
 }
+
 void M4_spatialSplit(int x){
     
 }
+
 void M5_temporalSplit(int x){
     
 }
-
-
-//fbase = file baseline, f1 = file of method 1 ...
-fstream fbase("Baseline.txt"), f1("M1_subSample.txt"), f2("M2_sparseDense.txt"), f3("M3_reduceResol.txt");
-fstream f4("M4_spatialSplit.txt"), f5("M5_temporalSplit.txt"), futil("UtilityReport.txt");
-
-//rtbase = runtime baseline, rt1 = runtime of method 1 ...
-//runtime calculation should EXCLUDE file input output!
-float rtbase, rt1, rt2, rt3, rt4, rt5;
 
 //method parameters
 int p1, p2, p3, p4, p5, p6;
@@ -100,6 +210,26 @@ bool testm1 = false, testm2 = false, testm3 = false, testm4 = false, testm5 = fa
 
 // main function
 int main() {
+    //preselected source points
+    source_points.push_back(Point2f(980, 224));        //top left corner
+    source_points.push_back(Point2f(418, 830));        //bottom left corner
+    source_points.push_back(Point2f(1506, 833));       //bottom right corner
+    source_points.push_back(Point2f(1290, 211));       //top right corner
+       
+    //preselected destination points for homography
+    trnsfrm_points.push_back(Point2f(472, 52));        // top left corner
+    trnsfrm_points.push_back(Point2f(472, 830));       // bottom left corner
+    trnsfrm_points.push_back(Point2f(800, 830));       // bottom right corner
+    trnsfrm_points.push_back(Point2f(800, 52));        // top right corner
+
+    matrix = findHomography(source_points, trnsfrm_points);
+    
+    //choose the frame at 173000ms as background(empty road)
+    video.set(CAP_PROP_POS_MSEC, 173000);
+
+    video.read(background);
+    background = warpAndCrop(background, matrix);
+
     //Write in text-file time | denseQ | denseM | frame number(optional). useful for graphing.
     baseline();
     if(testm1) M1_subSample(p1);
