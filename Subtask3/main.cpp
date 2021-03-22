@@ -234,7 +234,7 @@ void M3_reduceResol(int x, int y){
         // video is 15 FPS
         time = (float)frame / 15;
 
-        fbase << time << "," << denseQ << "," << denseM << "\n";
+        f3 << time << "," << denseQ << "," << denseM << "\n";
                 
         //update frame1 to frame2 and loop back
         frame1 = frame2;
