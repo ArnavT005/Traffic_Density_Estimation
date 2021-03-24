@@ -6,15 +6,6 @@ using namespace std;  // for standard library constructs
 using namespace cv;   // for opencv library constructs
 using namespace chrono;
 
-//VARIABLES
-
-
-string vid_path = "trafficvideo.mp4";
-VideoCapture video(vid_path);
-
-Mat background, frame1, frame2, diff, thresh, matrix;
-
-vector<Point2f> source_points, trnsfrm_points;
 
 //fbase = file baseline, f1 = file of method 1 ...
 //ofstream fbase("Baseline.txt"); 
@@ -27,9 +18,18 @@ ifstream f4_in("M4_spatialSplit.txt"), f5_in("M5_temporalSplit.txt");
 //runtime calculation should EXCLUDE file input output!
 float rtbase, rt1, rt2, rt3, rt4, rt5;
 
+//method parameters
+int p1 = 5, p2, p3 = 100, p4 = 200, p5, p6;
+
+//method utilities
+float u1, u2, u3, u4, u5;
+
+float e1, e2, e3, e4, e5;
+
+//Set testmi to true to test method i
+bool testbase = false, testm1 = false, testm2 = false, testm3 = true, testm4 = false, testm5 = false;
 
 //FUNCTIONS
-
 
 Mat subImg(Mat frame1, Mat frame2, int thr = 20) {
 
@@ -81,11 +81,17 @@ Mat warpAndCrop(Mat image, Mat matrix) {
     return cropped_image;
 }
 
-float utility(ifstream& base, ifstream& file, int x = 3) {
+float error(ifstream& base, ifstream& file, int x = 3) {
+   
     int baseLineNumber = 1, fileLineNumber, currentLine = 1;
     float error = 0;
     string buffer, baseQ, baseM, fileQ, fileM;
     bool flag = false;
+    
+    getline(file, buffer, ',');
+    getline(file, fileQ, ',');
+    getline(file, fileM);
+    
     while (getline(base, buffer, ',')) {
         getline(base, baseQ, ',');
         getline(base, baseM);
@@ -95,31 +101,34 @@ float utility(ifstream& base, ifstream& file, int x = 3) {
             baseLineNumber++;
             continue;
         }
-        while (currentLine < fileLineNumber) {
-            getline(file, buffer);
+        while (!flag && currentLine < fileLineNumber) {
+            if (!getline(file, buffer, ',')) {
+                flag = true;
+                break;
+            }
+            getline(file, fileQ, ',');
+            getline(file, fileM);
             currentLine++;
         }
-        
-        getline(file, buffer, ',');
-        getline(file, fileQ, ',');
-        getline(file, fileM);
-        
+
         error += (stof(baseQ) - stof(fileQ)) * (stof(baseQ) - stof(fileQ)) + (stof(baseM) - stof(fileM)) * (stof(baseM) - stof(fileM));
-        cout << error << "\n";
+
+        cout << stof(baseQ) << " " << stof(fileQ) << " " << error << "\n";
+
         baseLineNumber++;
     }
     error /= 2 * (baseLineNumber - 1);
-    return (1 / error);
+    return error;
 }
 
-void baseline() {
+void baseline(VideoCapture video, Mat background, Mat matrix) {
+    
+    Mat frame1, frame2, thresh;
+
     // total image area
     float AREA = background.size().area();
     float denseQ = 0, denseM = 0, time;
     int see_every_n_frame = 3, frame = 1;
-
-    //set video time to 0
-    video.set(CAP_PROP_POS_MSEC, 0);
 
     //read Frame 1
     video.read(frame1);
@@ -141,11 +150,11 @@ void baseline() {
         frame2 = warpAndCrop(frame2, matrix);
 
         //Queue Density - subtract background
-        thresh = subImg(background, frame2, 40);
+        thresh = subImg(background.clone(), frame2.clone(), 40);
         denseQ = findArea(thresh) / AREA;
 
         //Dynamic Density - subtract frame1
-        thresh = subImg(frame1, frame2);
+        thresh = subImg(frame1.clone(), frame2.clone());
         denseM = findArea(thresh) / AREA;
 
         // error correction if Queue density < Dynamic density
@@ -163,14 +172,14 @@ void baseline() {
     }
 }
 
-void M1_subSample(int x) {
+void M1_subSample(VideoCapture video, Mat background, Mat matrix, int x) {
+    
+    Mat frame1, frame2, thresh;
+
     // total image area
     float AREA = background.size().area();
     float denseQ = 0, denseM = 0, time;
     int see_every_n_frame = x, frame = 1;
-
-    //set video time to 0
-    video.set(CAP_PROP_POS_MSEC, 0);
 
     //read Frame 1
     video.read(frame1);
@@ -192,11 +201,11 @@ void M1_subSample(int x) {
         frame2 = warpAndCrop(frame2, matrix);
 
         //Queue Density - subtract background
-        thresh = subImg(background, frame2, 40);
+        thresh = subImg(background.clone(), frame2.clone(), 40);
         denseQ = findArea(thresh) / AREA;
 
         //Dynamic Density - subtract frame1
-        thresh = subImg(frame1, frame2);
+        thresh = subImg(frame1.clone(), frame2.clone());
         denseM = findArea(thresh) / AREA;
 
         // error correction if Queue density < Dynamic density
@@ -218,15 +227,15 @@ void M2_sparseDense(int x) {
 
 }
 
-void M3_reduceResol(int x, int y) {
+void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y) {
+    
+    Mat frame1, frame2, thresh;
+    
     // total image area
     resize(background, background, Size(x, y));
     float AREA = background.size().area();
     float denseQ = 0, denseM = 0, time;
     int see_every_n_frame = 3, frame = 1;
-
-    //set video time to 0
-    video.set(CAP_PROP_POS_MSEC, 0);
 
     //read Frame 1
     video.read(frame1);
@@ -250,11 +259,11 @@ void M3_reduceResol(int x, int y) {
         resize(frame2, frame2, Size(x, y));
 
         //Queue Density - subtract background
-        thresh = subImg(background, frame2, 40);
+        thresh = subImg(background.clone(), frame2.clone(), 40);
         denseQ = findArea(thresh) / AREA;
 
         //Dynamic Density - subtract frame1
-        thresh = subImg(frame1, frame2);
+        thresh = subImg(frame1.clone(), frame2.clone());
         denseM = findArea(thresh) / AREA;
 
         // error correction if Queue density < Dynamic density
@@ -280,17 +289,15 @@ void M5_temporalSplit(int x) {
 
 }
 
-//method parameters
-int p1 = 15, p2, p3 = 200, p4 = 500, p5, p6;
-
-//method utilities
-float u1, u2, u3, u4, u5;
-
-//Set testmi to true to test method i
-bool testbase = false, testm1 = true, testm2 = false, testm3 = false, testm4 = false, testm5 = false;
-
 // main function
 int main() {
+    
+    string vid_path = "trafficvideo.mp4";
+    VideoCapture video(vid_path);
+    
+    Mat background, matrix;
+    vector<Point2f> source_points, trnsfrm_points;
+    
     //preselected source points
     source_points.push_back(Point2f(980, 224));        //top left corner
     source_points.push_back(Point2f(418, 830));        //bottom left corner
@@ -309,40 +316,56 @@ int main() {
     video.set(CAP_PROP_POS_MSEC, 173000);
 
     video.read(background);
-    Size szbase = background.size();
     // baseline resolution = 329 x 779
     background = warpAndCrop(background, matrix);
+    Size szbase = background.size();
+
+    video.set(CAP_PROP_POS_MSEC, 0);
+
     clock_t start, end;
     //Write in text-file time | denseQ | denseM | frame number(optional). useful for graphing.
-    if (testbase) { start = clock(); baseline(); end = clock(); rtbase = float(end - start) / CLOCKS_PER_SEC; }
-    if (testm1) { start = clock(); M1_subSample(p1); end = clock(); rt1 = float(end - start) / CLOCKS_PER_SEC; }
+    if (testbase) { start = clock(); baseline(video, background.clone(), matrix); end = clock(); rtbase = float(end - start) / CLOCKS_PER_SEC; }
+    if (testm1) { start = clock(); M1_subSample(video, background.clone(), matrix, p1); end = clock(); rt1 = float(end - start) / CLOCKS_PER_SEC; }
     if (testm2) { start = clock(); M2_sparseDense(p2); end = clock(); rt2 = float(end - start) / CLOCKS_PER_SEC; }
-    if (testm3) { start = clock(); M3_reduceResol(p3, p4); end = clock(); rt3 = float(end - start) / CLOCKS_PER_SEC; }
+    if (testm3) { start = clock(); M3_reduceResol(video, background.clone(), matrix, p3, p4); end = clock(); rt3 = float(end - start) / CLOCKS_PER_SEC; }
     if (testm4) { start = clock(); M4_spatialSplit(p5); end = clock(); rt4 = float(end - start) / CLOCKS_PER_SEC; }
     if (testm5) { start = clock(); M5_temporalSplit(p6); end = clock(); rt5 = float(end - start) / CLOCKS_PER_SEC; }
+
+    f1.close(); 
+    f2.close();  f3.close();  f4.close();  f5.close();
 
     //Print utility report in text file. Print method name | parameter value | utility | time consumed in one line. used for debugging and changes.
     //Then after the above report print comma seperated utility, runtime for final graphing.
     futil << "Baseline RunTime = " << rtbase << " secs\n" << "Baseline Resolution = " << szbase << "\n";
     if (testm1) {
-        u1 = utility(fbase_in, f1_in, p1); futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 << ".\n\tUtility = " << u1 << ". RunTime = " << rt1 << " secs\n";
+        e1 = error(fbase_in, f1_in, p1); 
+        u1 = 1 / (0.01 + e1);
+        futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 << ".\n\tUtility = " << u1 << ". RunTime = " << rt1 << " secs\n";
     }
     if (testm2) {
-        u2 = utility(fbase_in, f2_in); futil << "Method 2: Sparse/Dense Flow - Type = " << p2 << ".\n\tUtility = " << u2 << ". RunTime = " << rt2 << " secs\n";
+        e2 = error(fbase_in, f2_in); 
+        u2 = 1 / (0.01 + e2);
+        futil << "Method 2: Sparse/Dense Flow - Type = " << p2 << ".\n\tUtility = " << u2 << ". RunTime = " << rt2 << " secs\n";
     }
     if (testm3) {
-        u3 = utility(fbase_in, f3_in); futil << "Method 3: Reduce Resolution - Resolution = " << p3 << "x" << p4 << ".\n\tUtility = " << u3 << ". RunTime = " << rt3 << " secs\n";
+        e3 = error(fbase_in, f3_in); 
+        u3 = 1 / (0.01 + e3);
+        futil << "Method 3: Reduce Resolution - Resolution = " << p3 << "x" << p4 << ".\n\tUtility = " << u3 << ". RunTime = " << rt3 << " secs\n";
     }
     if (testm4) {
-        u4 = utility(fbase_in, f4_in); futil << "Method 4: Spatial Split - No. of frame splits = " << p5 << ".\n\tUtility = " << u4 << ". RunTime = " << rt4 << " secs\n";
+        e4 = error(fbase_in, f4_in); 
+        u4 = 1 / (0.01 + e4);
+        futil << "Method 4: Spatial Split - No. of frame splits = " << p5 << ".\n\tUtility = " << u4 << ". RunTime = " << rt4 << " secs\n";
     }
     if (testm5) {
-        u5 = utility(fbase_in, f5_in); futil << "Method 5: Temporal Slpit - No. of threads = " << p6 << ".\n\tUtility = " << u5 << ". RunTime = " << rt5 << " secs\n\n";
+        e5 = error(fbase_in, f5_in); 
+        u5 = 1 / (0.01 + e5);
+        futil << "Method 5: Temporal Slpit - No. of threads = " << p6 << ".\n\tUtility = " << u5 << ". RunTime = " << rt5 << " secs\n\n";
     }
 
     //Close all files
     //fbase.close();
-    f1.close();  f2.close();  f3.close();  f4.close();  f5.close();  futil.close();
+    futil.close();
 
     cout << "Program Executed Successfully\n";
     return 0;
