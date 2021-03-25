@@ -29,6 +29,15 @@ float e1, e2, e3, e4, e5;
 //Set testmi to true to test method i
 bool testbase = false, testm1 = false, testm2 = false, testm3 = false, testm4 = true, testm5 = false;
 
+struct M4 {
+    VideoCapture video;
+    Mat background;
+    Mat matrix;
+    int total_splits;
+    int split_number;
+    ofstream fout;
+};
+
 struct subArgs{
     Mat frame1;
     Mat frame2;
@@ -348,33 +357,25 @@ void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y
     }
 }
 
-void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
-    Mat frame1, frame2, thresh;
-    
+void* M4_multi_thread(void* args) {
+    M4* arg = (M4*)args;
+    Mat frame1, frame2, thresh, bg, f1, f2;
+    cout << "Starting thread\n";
     // total image area
-    float AREA = background.size().area();
+    float AREA = arg->background.size().area();
     float denseQ = 0, denseM = 0, time;
     int see_every_n_frame = 3, frame = 1;
 
     //read Frame 1
-    video.read(frame1);
-    frame1 = warpAndCrop(frame1, matrix);
-    pthread_t t[8];
-    subArgs arg[8];
-    subArgs* args[8];
-    clock_t ts, te;
-    float m = 0;
+    arg->video.read(frame1);
+    frame1 = warpAndCrop(frame1, arg->matrix);
     
-    //divide background
-    for ( int i = 0; i < x; i++ ){
-        arg[i].background = background(Range((i*background.rows)/x, ((i+1)*background.rows)/x), Range(0, background.cols)).clone();
-    }
-        
+    bg = arg->background(Range(((arg->split_number)*(arg->background.rows))/(arg->total_splits), ((arg->split_number+1)*(arg->background.rows))/(arg->total_splits)), Range(0, arg->background.cols)).clone();
+
     while (true) {
-        ts = clock();
         //read Frame 2
         for (int i = 0; i < see_every_n_frame; i++) {
-            video.read(frame2);
+            arg->video.read(frame2);
             frame++;
         }
 
@@ -382,59 +383,76 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
         if (frame2.empty()) {
             break;
         }
+
+        frame2 = warpAndCrop(frame2, arg->matrix);
         
-        te = clock();
-        m += (float)(te - ts) / CLOCKS_PER_SEC;
-        frame2 = warpAndCrop(frame2, matrix);
         
+        f1 = frame1(Range(((arg->split_number)*(frame1.rows))/(arg->total_splits), ((arg->split_number+1)*(frame1.rows))/(arg->total_splits)), Range(0, frame1.cols)).clone();
+        f2 = frame2(Range(((arg->split_number)*(frame2.rows))/(arg->total_splits), ((arg->split_number+1)*(frame2.rows))/(arg->total_splits)), Range(0, frame2.cols)).clone();
         
         //Queue Density - subtract background
-        //topleft = frame2(Range(0, frame2.rows/2), Range(0, frame2.cols/2));
-        for ( int i = 0; i < x; i++ ){
-            arg[i].frame1 = frame1(Range((i*frame1.rows)/x, ((i+1)*frame1.rows)/x), Range(0, frame1.cols));
-            arg[i].frame2 = frame2(Range((i*frame2.rows)/x, ((i+1)*frame2.rows)/x), Range(0, frame2.cols));
-        }
-        
-        for(int i = 0; i < x; i++)
-        {
-           pthread_create(&t[i], NULL, &findDiffArea, (void*)(&arg[i]));
-        }
-        for(int i = 0; i < x; i++)
-        {
-            pthread_join(t[i], (void**)&args[i]);
-            arg[i] = *args[i];
-        }
-        
-        //findDiffArea(&arg[0]);
-        float tempM = 0, tempQ = 0;
-        for( int i = 0 ; i < x; i++){
-            tempM += arg[i].areaM;
-        }
-        for( int i = 0 ; i < x; i++){
-            tempQ += arg[i].areaQ;
-        }
-        denseQ = tempQ / AREA;
+        thresh = subImg(bg.clone(), f2.clone(), 40);
+        denseQ = findArea(thresh) / AREA;
 
         //Dynamic Density - subtract frame1
-        //thresh = subImg(frame1.clone(), frame2.clone());
-        denseM = tempM / AREA;
-
-        // error correction if Queue density < Dynamic density
-        // slight error occurs due to different threshold values used
-        // when only moving vehicles are present
-        denseQ = denseQ > denseM ? denseQ : denseM;
+        thresh = subImg(f1.clone(), f2.clone());
+        denseM = findArea(thresh) / AREA;
 
         // video is 15 FPS
         time = (float)frame / 15;
 
-        f4 << time << "," << denseQ << "," << denseM << "\n";
+        arg->fout << time << "," << denseQ << "," << denseM << "\n";
 
         //update frame1 to frame2 and loop back
         frame1 = frame2;
         
     }
-    cout << m << "\n";
+    arg->fout.close();
+    return NULL;
 }
+
+void M4_spatialSplit(string vid_path, Mat background, Mat matrix, int x) {
+    pthread_t t[8];
+    M4 arg[8];
+    M4* args[8];
+    ifstream fin[8];
+    VideoCapture video[8];
+    float denseQ = 0, denseM = 0, time;
+    string buffer, fileQ, fileM;
+    int i, j;
+    for(i = 0; i < x; i ++) {
+        video[i].open(vid_path);
+        arg[i].video = video[i];
+        arg[i].background = background;
+        arg[i].matrix = matrix;
+        arg[i].total_splits = x;
+        arg[i].split_number = i;
+        arg[i].fout.open("Thread" + to_string(i) + ".txt");
+        pthread_create(&t[i], NULL, &M4_multi_thread, (void*)&arg[i]);
+    }
+    for(i = 0; i < x; i ++) {
+        pthread_join(t[i], (void**)&args[i]);
+        cout << "Ending thread\n";
+    }
+    for(i = 0; i < x; i ++) {
+        fin[i].open("Thread" + to_string(i) + ".txt");
+    }
+    for(i = 0; i < 1912; i ++) {
+        denseQ = 0;
+        denseM = 0;
+        for(j = 0; j < x; j ++) {
+            getline(fin[j], buffer, ',');
+            getline(fin[j], fileQ, ',');
+            getline(fin[j], fileM);
+            denseQ += stof(fileQ);
+            denseM += stof(fileM);
+        }
+        time = (4 + i * 3) / 15.0;
+        f4 << time << "," << denseQ << "," << denseM << "\n";
+    }
+}
+
+
 
 void M5_temporalSplit(int x) {
 
@@ -479,13 +497,12 @@ int main() {
     if (testm1) { start = clock(); M1_subSample(video, background.clone(), matrix, p1); end = clock(); rt1 = float(end - start) / CLOCKS_PER_SEC; }
     if (testm2) { start = clock(); M2_sparseDense(p2); end = clock(); rt2 = float(end - start) / CLOCKS_PER_SEC; }
     if (testm3) { start = clock(); M3_reduceResol(video, background.clone(), matrix, p3, p4); end = clock(); rt3 = float(end - start) / CLOCKS_PER_SEC; }
-    if (testm4) { start = clock(); M4_spatialSplit(video, background.clone(), matrix, p5); end = clock(); rt4 = float(end - start) / CLOCKS_PER_SEC; }
+    if (testm4) { start = clock(); M4_spatialSplit("trafficvideo.mp4", background.clone(), matrix, p5); end = clock(); rt4 = float(end - start) / CLOCKS_PER_SEC; }
     if (testm5) { start = clock(); M5_temporalSplit(p6); end = clock(); rt5 = float(end - start) / CLOCKS_PER_SEC; }
 
     //fbase.close();
     f1.close();
     f2.close();  f3.close();  f4.close();  f5.close();
-
     //Print utility report in text file. Print method name | parameter value | utility | time consumed in one line. used for debugging and changes.
     //Then after the above report print comma seperated utility, runtime for final graphing.
     futil << "Baseline RunTime = " << rtbase << " secs\n" << "Baseline Resolution = " << szbase << "\n";
