@@ -8,9 +8,7 @@ using namespace chrono;
 
 
 //fbase = file baseline, f1 = file of method 1 ...
-//ofstream fbase("Baseline.txt");
-ofstream f1("M1_subSample.txt"), f2("M2_sparseDense.txt"), f3("M3_reduceResol.txt");
-ofstream f4("M4_spatialSplit.txt"), f5("M5_temporalSplit.txt"), futil("UtilityReport.txt", ios::app);
+ofstream futil("UtilityReport.txt", ios::app);
 ifstream fbase_in("Baseline.txt"), f1_in("M1_subSample.txt"), f2_in("M2_sparseDense.txt"), f3_in("M3_reduceResol.txt");
 ifstream f4_in("M4_spatialSplit.txt"), f5_in("M5_temporalSplit.txt");
 
@@ -19,12 +17,13 @@ ifstream f4_in("M4_spatialSplit.txt"), f5_in("M5_temporalSplit.txt");
 float rtbase, rt1, rt2, rt3, rt4, rt5;
 
 //method parameters
-int p1 = 5, p2, p3 = 100, p4 = 200, p5 = 5, p6;
+int p1 = 5, p2, p3 = 100, p4 = 200, p5 = 4, p6;
 
 //method utilities
-float u1, u2, u3, u4, u5;
+float u11, u21, u31, u41, u51;
+float u12, u22, u32, u42, u52;
 
-float e1, e2, e3, e4, e5;
+vector<float> e1, e2, e3, e4, e5;
 
 //Set testmi to true to test method i
 bool testbase = false, testm1 = false, testm2 = false, testm3 = false, testm4 = true, testm5 = false;
@@ -38,10 +37,10 @@ struct subArgs{
 
 //FUNCTIONS
 void* findDiffArea(void* arg) {
-
-    Mat diff, thresh, frame1, frame2;
-    frame1 = ((struct subArgs*)arg)-> frame1;
-    frame2 = ((struct subArgs*)arg)-> frame2;
+    Mat diff, thresh, frame1, frame2, background;
+    frame1 = ((struct subArgs*)arg)-> frame1.clone();
+    frame2 = ((struct subArgs*)arg)-> frame2.clone();
+    background = ((struct subArgs*)arg) -> background.clone();
 
     //grayscale
     cvtColor(frame1, frame1, COLOR_BGR2GRAY);
@@ -50,6 +49,9 @@ void* findDiffArea(void* arg) {
     //grayscale
     cvtColor(frame2, frame2, COLOR_BGR2GRAY);
     GaussianBlur(frame2, frame2, Size(5, 5), 0);
+
+    cvtColor(background, background, COLOR_BGR2GRAY);
+    GaussianBlur(background, background, Size(5, 5), 0);
 
     //absolute frame diff
     absdiff(frame1, frame2, diff);
@@ -73,6 +75,25 @@ void* findDiffArea(void* arg) {
     }
     
     ((struct subArgs*)arg) -> areaM = area;
+
+    //absolute frame diff
+    absdiff(frame2, background, diff);
+
+    //threshold
+    threshold(diff, thresh, 40, 255, THRESH_BINARY);
+    erode(thresh, thresh, kernel5x5);
+    dilate(thresh, thresh, kernel21x21);
+    
+    area = 0;
+    for (int i = 0; i < thresh.rows; i++) {
+        for (int j = 0; j < thresh.cols; j++) {
+            if (thresh.at<uchar>(i, j) != 0)
+                area = area + 1;
+        }
+    }
+    
+    ((struct subArgs*)arg) -> areaQ = area;
+    
     return (void*) arg;
 }
 
@@ -126,12 +147,15 @@ Mat warpAndCrop(Mat image, Mat matrix) {
     return cropped_image;
 }
 
-float error(ifstream& base, ifstream& file, int x = 3) {
-   
+vector<float> error(ifstream& base, ifstream& file, string move, string queue, int x = 3) {
+    vector<float> error = {0, 0};
+    ofstream fmove(move), fqueue(queue);
     int baseLineNumber = 1, fileLineNumber, currentLine = 1;
-    float error = 0;
     string buffer, baseQ, baseM, fileQ, fileM;
     bool flag = false;
+    fmove<<"Time, Output, Baseline\n";
+    fqueue<<"Time, Output, Baseline\n";
+
     
     getline(file, buffer, ',');
     getline(file, fileQ, ',');
@@ -142,7 +166,10 @@ float error(ifstream& base, ifstream& file, int x = 3) {
         getline(base, baseM);
         fileLineNumber = (3 * baseLineNumber) / x;
         if (fileLineNumber == 0) {
-            error += (stof(baseQ)) * (stof(baseQ)) + (stof(baseM)) * (stof(baseM));
+            error[0] += (stof(baseQ)) * (stof(baseQ));
+            error[1] += (stof(baseM)) * (stof(baseM));
+            fmove<<buffer<<",0,"<<baseM;
+            fqueue<<buffer<<",0,"<<baseQ;
             baseLineNumber++;
             continue;
         }
@@ -156,17 +183,20 @@ float error(ifstream& base, ifstream& file, int x = 3) {
             currentLine++;
         }
 
-        error += (stof(baseQ) - stof(fileQ)) * (stof(baseQ) - stof(fileQ)) + (stof(baseM) - stof(fileM)) * (stof(baseM) - stof(fileM));
-
-        //cout << stof(baseQ) << " " << stof(fileQ) << " " << error << "\n";
-
+        error[0] += (stof(baseQ) - stof(fileQ)) * (stof(baseQ) - stof(fileQ));
+        error[1] += (stof(baseM) - stof(fileM)) * (stof(baseM) - stof(fileM));
+        fmove<<buffer<<","<<fileM<<","<<baseM<<"\n";
+        fqueue<<buffer<<","<<fileQ<<","<<baseQ<<"\n";
         baseLineNumber++;
     }
-    error /= 2 * (baseLineNumber - 1);
+    error[0] /= 2 * (baseLineNumber - 1);
+    error[1] /= 2 * (baseLineNumber - 1);
+    fmove.close();
+    fqueue.close();
     return error;
 }
 
-void baseline(VideoCapture video, Mat background, Mat matrix) {
+void baseline(VideoCapture video, Mat background, Mat matrix, ofstream &file) {
     video.set(CAP_PROP_POS_MSEC, 0);
 
     Mat frame1, frame2, thresh;
@@ -211,14 +241,14 @@ void baseline(VideoCapture video, Mat background, Mat matrix) {
         // video is 15 FPS
         time = (float)frame / 15;
 
-        //fbase << time << "," << denseQ << "," << denseM << "\n";
+        file << time << "," << denseQ << "," << denseM << "\n";
 
         //update frame1 to frame2 and loop back
         frame1 = frame2;
     }
 }
 
-void M1_subSample(VideoCapture video, Mat background, Mat matrix, int x) {
+void M1_subSample(VideoCapture video, Mat background, Mat matrix, int x, ofstream &file) {
     video.set(CAP_PROP_POS_MSEC, 0);
 
     Mat frame1, frame2, thresh;
@@ -263,7 +293,7 @@ void M1_subSample(VideoCapture video, Mat background, Mat matrix, int x) {
         // video is 15 FPS
         time = (float)frame / 15;
 
-        f1 << time << "," << denseQ << "," << denseM << "\n";
+        file << time << "," << denseQ << "," << denseM << "\n";
 
         //update frame1 to frame2 and loop back
         frame1 = frame2;
@@ -271,11 +301,10 @@ void M1_subSample(VideoCapture video, Mat background, Mat matrix, int x) {
 }
 
 void M2_sparseDense(int x) {
-    //video.set(CAP_PROP_POS_MSEC, 0);
 
 }
 
-void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y) {
+void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y, ofstream &file) {
     video.set(CAP_PROP_POS_MSEC, 0);
 
     Mat frame1, frame2, thresh;
@@ -323,14 +352,14 @@ void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y
         // video is 15 FPS
         time = (float)frame / 15;
 
-        f3 << time << "," << denseQ << "," << denseM << "\n";
+        file << time << "," << denseQ << "," << denseM << "\n";
 
         //update frame1 to frame2 and loop back
         frame1 = frame2;
     }
 }
 
-void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
+void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x, ofstream &file) {
     Mat frame1, frame2, thresh;
     video.set(CAP_PROP_POS_MSEC, 0);
 
@@ -344,16 +373,17 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
     frame1 = warpAndCrop(frame1, matrix);
     pthread_t t[8];
     subArgs arg[8];
+    subArgs* args[8];
     clock_t ts, te;
-
+    float m = 0;
+    
     //divide background
     for ( int i = 0; i < x; i++ ){
-        arg[i].background = background(Range(i*background.rows/x, (i+1)*background.rows/x), Range(0, background.cols));
+        arg[i].background = background(Range((i*background.rows)/x, ((i+1)*background.rows)/x), Range(0, background.cols)).clone();
     }
-    float m = 0;
-
+        
     while (true) {
-
+        ts = clock();
         //read Frame 2
         for (int i = 0; i < see_every_n_frame; i++) {
             video.read(frame2);
@@ -364,36 +394,38 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
         if (frame2.empty()) {
             break;
         }
-
+        
+        te = clock();
+        m += (float)(te - ts) / CLOCKS_PER_SEC;
         frame2 = warpAndCrop(frame2, matrix);
-
+        
+        
         //Queue Density - subtract background
         //topleft = frame2(Range(0, frame2.rows/2), Range(0, frame2.cols/2));
         for ( int i = 0; i < x; i++ ){
-            arg[i].frame1 = frame1(Range(i*frame1.rows/x, (i+1)*frame1.rows/x), Range(0, frame1.cols));
-            arg[i].frame2 = frame2(Range(i*frame2.rows/x, (i+1)*frame2.rows/x), Range(0, frame2.cols));
+            arg[i].frame1 = frame1(Range((i*frame1.rows)/x, ((i+1)*frame1.rows)/x), Range(0, frame1.cols));
+            arg[i].frame2 = frame2(Range((i*frame2.rows)/x, ((i+1)*frame2.rows)/x), Range(0, frame2.cols));
         }
         
-
         for(int i = 0; i < x; i++)
         {
-           pthread_create(&t[i], NULL, findDiffArea, (void*)(&arg[i]));
+           pthread_create(&t[i], NULL, &findDiffArea, (void*)(&arg[i]));
         }
-
-        ts = clock();
-
         for(int i = 0; i < x; i++)
         {
-            pthread_join(t[i], (void**)&arg[i]);
+            pthread_join(t[i], (void**)&args[i]);
+            arg[i] = *args[i];
         }
-        te = clock();
-        m += float(te-ts)/CLOCKS_PER_SEC;
         
-        float tempM = 0;
+        //findDiffArea(&arg[0]);
+        float tempM = 0, tempQ = 0;
         for( int i = 0 ; i < x; i++){
             tempM += arg[i].areaM;
         }
-        //denseQ = findArea(thresh) / AREA;
+        for( int i = 0 ; i < x; i++){
+            tempQ += arg[i].areaQ;
+        }
+        denseQ = tempQ / AREA;
 
         //Dynamic Density - subtract frame1
         //thresh = subImg(frame1.clone(), frame2.clone());
@@ -407,23 +439,24 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
         // video is 15 FPS
         time = (float)frame / 15;
 
-        f4 << time << "," << denseQ << "," << denseM << "\n";
+        file << time << "," << denseQ << "," << denseM << "\n";
 
         //update frame1 to frame2 and loop back
         frame1 = frame2;
+        
     }
-
-    cout<<m<<"\n";
+    cout << m << "\n";
 }
 
-void M5_temporalSplit(int x) {
+void M5_temporalSplit(VideoCapture video, Mat background, Mat matrix, int x, ofstream &file) {
+    video.set(CAP_PROP_POS_MSEC, 0);
     
 }
 
 // main function
 int main() {
     
-    string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
+    string vid_path = "trafficvideo.mp4";
     VideoCapture video(vid_path);
     
     Mat background, matrix;
@@ -451,52 +484,98 @@ int main() {
     background = warpAndCrop(background, matrix);
     Size szbase = background.size();
 
-
     clock_t start, end;
     //Write in text-file time | denseQ | denseM | frame number(optional). useful for graphing.
-    if (testbase) { start = clock(); baseline(video, background.clone(), matrix); end = clock(); rtbase = float(end - start) / CLOCKS_PER_SEC; }
-    if (testm1) { start = clock(); M1_subSample(video, background.clone(), matrix, p1); end = clock(); rt1 = float(end - start) / CLOCKS_PER_SEC; }
-    if (testm2) { start = clock(); M2_sparseDense(p2); end = clock(); rt2 = float(end - start) / CLOCKS_PER_SEC; }
-    if (testm3) { start = clock(); M3_reduceResol(video, background.clone(), matrix, p3, p4); end = clock(); rt3 = float(end - start) / CLOCKS_PER_SEC; }
-    if (testm4) { start = clock(); M4_spatialSplit(video, background.clone(), matrix, p5); end = clock(); rt4 = float(end - start) / CLOCKS_PER_SEC; }
-    if (testm5) { start = clock(); M5_temporalSplit(p6); end = clock(); rt5 = float(end - start) / CLOCKS_PER_SEC; }
 
-    f1.close();
-    f2.close();  f3.close();  f4.close();  f5.close();
+    if (testbase) {
+        ofstream fbase("Baseline.txt");
+        start = clock();
+        baseline(video, background.clone(), matrix, fbase);
+        end = clock();
+        rtbase = float(end - start) / CLOCKS_PER_SEC;
+        fbase.close();
+    }
+    if (testm1) {
+        ofstream f1("M1_subSample.txt");
+        start = clock();
+        M1_subSample(video, background.clone(), matrix, p1, f1);
+        end = clock();
+        rt1 = float(end - start) / CLOCKS_PER_SEC;
+        f1.close();
+    }
+    if (testm2) {
+        ofstream f2("M2_sparseDense.txt");
+        start = clock();
+        M2_sparseDense(p2);
+        end = clock();
+        rt2 = float(end - start) / CLOCKS_PER_SEC;
+        f2.close();
+    }
+    if (testm3) {
+        ofstream f3("M3_reduceResol.txt");
+        start = clock();
+        M3_reduceResol(video, background.clone(), matrix, p3, p4, f3);
+        end = clock();
+        rt3 = float(end - start) / CLOCKS_PER_SEC;
+        f3.close();
+    }
+    if (testm4) {
+        ofstream f4("M4_spatialSplit.txt");
+        start = clock();
+        M4_spatialSplit(video, background.clone(), matrix, p5, f4);
+        end = clock();
+        rt4 = float(end - start) / CLOCKS_PER_SEC;
+        f4.close();
+    }
+    if (testm5) {
+        ofstream f5("M5_temporalSplit.txt");
+        start = clock();
+        M5_temporalSplit(video, background.clone(), matrix, p6, f5);
+        end = clock();
+        rt5 = float(end - start) / CLOCKS_PER_SEC;
+        f5.close();
+    }
 
     //Print utility report in text file. Print method name | parameter value | utility | time consumed in one line. used for debugging and changes.
     //Then after the above report print comma seperated utility, runtime for final graphing.
     futil << "Baseline RunTime = " << rtbase << " secs\n" << "Baseline Resolution = " << szbase << "\n";
     if (testm1) {
-        e1 = error(fbase_in, f1_in, p1);
-        u1 = 1 / (0.01 + e1);
-        futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 << ".\n\tUtility = " << u1 << ". RunTime = " << rt1 << " secs\n";
+        e1 = error(fbase_in, f1_in, "M1_moveVsBase", "M1_queueVsBase", p1);
+        u11 = 1 / (0.01 + e1[0]);
+        u12 = 1 / (0.01 + e1[0]);
+        futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 << ".\n\tQueue Utility = " << u11 << ". Moving Utility = " << u12 << ". RunTime = " << rt1 << " secs\n";
     }
     if (testm2) {
-        e2 = error(fbase_in, f2_in);
-        u2 = 1 / (0.01 + e2);
-        futil << "Method 2: Sparse/Dense Flow - Type = " << p2 << ".\n\tUtility = " << u2 << ". RunTime = " << rt2 << " secs\n";
+        e2 = error(fbase_in, f2_in, "M2_moveVsBase", "M2_queueVsBase");
+        u21 = 1 / (0.01 + e2[0]);
+        u22 = 1 / (0.01 + e2[1]);
+        futil << "Method 2: Sparse/Dense Flow - Type = " << p2 << ".\n\tQueue Utility = " << u21 << ". Moving Utility = " << u22 << ". RunTime = " << rt2 << " secs\n";
     }
     if (testm3) {
-        e3 = error(fbase_in, f3_in);
-        u3 = 1 / (0.01 + e3);
-        futil << "Method 3: Reduce Resolution - Resolution = " << p3 << "x" << p4 << ".\n\tUtility = " << u3 << ". RunTime = " << rt3 << " secs\n";
+        e3 = error(fbase_in, f3_in, "M3_moveVsBase", "M3_queueVsBase");
+        u31 = 1 / (0.01 + e3[0]);
+        u32 = 1 / (0.01 + e3[1]);
+
+        futil << "Method 3: Reduce Resolution - Resolution = " << p3 << "x" << p4 << ".\n\tQueue Utility = " << u31 << ". Moving Utility = " << u32 << ". RunTime = " << rt3 << " secs\n";
     }
     if (testm4) {
-        e4 = error(fbase_in, f4_in);
-        u4 = 1 / (0.01 + e4);
-        futil << "Method 4: Spatial Split - No. of frame splits = " << p5 << ".\n\tUtility = " << u4 << ". RunTime = " << rt4 << " secs\n";
+        e4 = error(fbase_in, f4_in, "M4_moveVsBase", "M4_queueVsBase");
+        u41 = 1 / (0.01 + e4[0]);
+        u42 = 1 / (0.01 + e4[1]);
+
+        futil << "Method 4: Spatial Split - No. of frame splits = " << p5 << ".\n\tQueue Utility = " << u41 << ". Moving Utility = " << u42 << ". RunTime = " << rt4 << " secs\n";
     }
     if (testm5) {
-        e5 = error(fbase_in, f5_in);
-        u5 = 1 / (0.01 + e5);
-        futil << "Method 5: Temporal Slpit - No. of threads = " << p6 << ".\n\tUtility = " << u5 << ". RunTime = " << rt5 << " secs\n\n";
+        e5 = error(fbase_in, f5_in, "M5_moveVsBase", "M5_queueVsBase");
+        u51 = 1 / (0.01 + e5[0]);
+        u52 = 1 / (0.01 + e5[1]);
+        futil << "Method 5: Temporal Slpit - No. of threads = " << p6 << ".\n\tQueue Utility = " << u51 << ". Moving Utility = " << u52 << ". RunTime = " << rt5 << " secs\n\n";
     }
 
     //Close all files
-    //fbase.close();
     futil.close();
 
     cout << "Program Executed Successfully\n";
     return 0;
 }
+
