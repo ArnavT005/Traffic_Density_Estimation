@@ -17,7 +17,7 @@ ifstream f4_in("M4_spatialSplit.txt"), f5_in("M5_temporalSplit.txt");
 float rtbase, rt1, rt2, rt3, rt4, rt5;
 
 //method parameters
-int p1 = 5, p2, p3 = 100, p4 = 200, p5 = 4, p6;
+int p1 = 5, p2, p3 = 100, p4 = 200, p5 = 4, p6 = 4;
 
 //method utilities
 float u11, u21, u31, u41, u51;
@@ -26,13 +26,22 @@ float u12, u22, u32, u42, u52;
 vector<float> e1, e2, e3, e4, e5;
 
 //Set testmi to true to test method i
-bool testbase = false, testm1 = false, testm2 = false, testm3 = false, testm4 = true, testm5 = false;
+bool testbase = false, testm1 = false, testm2 = false, testm3 = false, testm4 = false, testm5 = true;
 
 struct subArgs{
     Mat frame1;
     Mat frame2;
     Mat background;
     float areaM, areaQ;
+};
+
+struct m5{
+    VideoCapture video;
+    Mat background;
+    Mat matrix;
+    string file;
+    int start;
+    int end;
 };
 
 //FUNCTIONS
@@ -156,7 +165,6 @@ vector<float> error(ifstream& base, ifstream& file, string move, string queue, i
     fmove<<"Time, Output, Baseline\n";
     fqueue<<"Time, Output, Baseline\n";
 
-    
     getline(file, buffer, ',');
     getline(file, fileQ, ',');
     getline(file, fileM);
@@ -168,8 +176,8 @@ vector<float> error(ifstream& base, ifstream& file, string move, string queue, i
         if (fileLineNumber == 0) {
             error[0] += (stof(baseQ)) * (stof(baseQ));
             error[1] += (stof(baseM)) * (stof(baseM));
-            fmove<<buffer<<",0,"<<baseM;
-            fqueue<<buffer<<",0,"<<baseQ;
+            fmove<<buffer<<",0,"<<baseM<<"\n";
+            fqueue<<buffer<<",0,"<<baseQ<<"\n";
             baseLineNumber++;
             continue;
         }
@@ -194,6 +202,68 @@ vector<float> error(ifstream& base, ifstream& file, string move, string queue, i
     fmove.close();
     fqueue.close();
     return error;
+}
+
+
+void* M5(void* arg) {
+    VideoCapture video = ((struct m5*)arg)-> video;
+    Mat background = ((struct m5*)arg)-> background;
+    Mat matrix = ((struct m5*)arg)-> matrix;
+    ofstream file(((struct m5*)arg)-> file);
+    int start = ((struct m5*)arg)-> start;
+    start = start + (3 - start%3)%3;
+    int end = ((struct m5*)arg)-> end;
+    if (start != 0) {start-=3;}
+    video.set(CAP_PROP_POS_FRAMES, start);
+
+    Mat frame1, frame2, thresh;
+
+    // total image area
+    float AREA = background.size().area();
+    float denseQ = 0, denseM = 0, time;
+    int see_every_n_frame = 3, frame = start+1;
+
+    //read Frame 1
+    video.read(frame1);
+    frame1 = warpAndCrop(frame1, matrix);
+
+    while (frame < end) {
+
+        //read Frame 2
+        for (int i = 0; i < see_every_n_frame; i++) {
+            video.read(frame2);
+            frame++;
+        }
+
+        //Video End
+        if (frame2.empty() || frame >= end) {
+            break;
+        }
+
+        frame2 = warpAndCrop(frame2, matrix);
+
+        //Queue Density - subtract background
+        thresh = subImg(background.clone(), frame2.clone(), 40);
+        denseQ = findArea(thresh) / AREA;
+
+        //Dynamic Density - subtract frame1
+        thresh = subImg(frame1.clone(), frame2.clone());
+        denseM = findArea(thresh) / AREA;
+
+        // error correction if Queue density < Dynamic density
+        // slight error occurs due to different threshold values used
+        // when only moving vehicles are present
+        denseQ = denseQ > denseM ? denseQ : denseM;
+
+        // video is 15 FPS
+        time = (float)frame / 15;
+
+        file << time << "," << denseQ << "," << denseM << "\n";
+
+        //update frame1 to frame2 and loop back
+        frame1 = frame2;
+    }
+    return NULL;
 }
 
 void baseline(VideoCapture video, Mat background, Mat matrix, ofstream &file) {
@@ -448,15 +518,40 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x, ofst
     cout << m << "\n";
 }
 
-void M5_temporalSplit(VideoCapture video, Mat background, Mat matrix, int x, ofstream &file) {
-    video.set(CAP_PROP_POS_MSEC, 0);
-    
+void M5_temporalSplit(string path, Mat background, Mat matrix, int x, ofstream &file) {
+    pthread_t t[8];
+    m5 arg[8];
+    ifstream f[8];
+    VideoCapture temp(path);
+    int frame_cnt = temp.get(CAP_PROP_FRAME_COUNT);
+    for(int i = 0; i < x; i++)
+    {
+        arg[i].video.open(path);
+        arg[i].background = background;
+        arg[i].matrix = matrix;
+        arg[i].file = to_string(i+1) + ".txt";
+        f[i].open(arg[i].file);
+        arg[i].start = i*frame_cnt/x;
+        arg[i].end = (i+1)*frame_cnt/x;
+        pthread_create(&t[i], NULL, &M5, (void*)(&arg[i]));
+    }
+    for(int i = 0; i < x; i++)
+    {
+        pthread_join(t[i], NULL);
+    }
+    for(int i = 0; i < x; i++){
+        string buffer;
+        while(getline(f[i], buffer)){
+            file<<buffer<<"\n";
+        }
+    }
 }
 
 // main function
 int main() {
-    
-    string vid_path = "trafficvideo.mp4";
+    cout<<"Starting Execution\n";
+    string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
+    //string vid_path = "trafficvideo.mp4";
     VideoCapture video(vid_path);
     
     Mat background, matrix;
@@ -530,7 +625,7 @@ int main() {
     if (testm5) {
         ofstream f5("M5_temporalSplit.txt");
         start = clock();
-        M5_temporalSplit(video, background.clone(), matrix, p6, f5);
+        M5_temporalSplit(vid_path, background.clone(), matrix, p6, f5);
         end = clock();
         rt5 = float(end - start) / CLOCKS_PER_SEC;
         f5.close();
