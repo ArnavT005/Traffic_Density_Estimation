@@ -19,7 +19,7 @@ ifstream f4_in("M4_spatialSplit.txt"), f5_in("M5_temporalSplit.txt");
 float rtbase, rt1, rt2, rt3, rt4, rt5;
 
 //method parameters
-int p1 = 5, p2, p3 = 100, p4 = 200, p5 = 1, p6;
+int p1 = 5, p2, p3 = 100, p4 = 200, p5 = 5, p6;
 
 //method utilities
 float u1, u2, u3, u4, u5;
@@ -167,7 +167,8 @@ float error(ifstream& base, ifstream& file, int x = 3) {
 }
 
 void baseline(VideoCapture video, Mat background, Mat matrix) {
-    
+    video.set(CAP_PROP_POS_MSEC, 0);
+
     Mat frame1, frame2, thresh;
 
     // total image area
@@ -218,7 +219,8 @@ void baseline(VideoCapture video, Mat background, Mat matrix) {
 }
 
 void M1_subSample(VideoCapture video, Mat background, Mat matrix, int x) {
-    
+    video.set(CAP_PROP_POS_MSEC, 0);
+
     Mat frame1, frame2, thresh;
 
     // total image area
@@ -269,11 +271,13 @@ void M1_subSample(VideoCapture video, Mat background, Mat matrix, int x) {
 }
 
 void M2_sparseDense(int x) {
+    //video.set(CAP_PROP_POS_MSEC, 0);
 
 }
 
 void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y) {
-    
+    video.set(CAP_PROP_POS_MSEC, 0);
+
     Mat frame1, frame2, thresh;
     
     // total image area
@@ -328,7 +332,8 @@ void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y
 
 void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
     Mat frame1, frame2, thresh;
-    
+    video.set(CAP_PROP_POS_MSEC, 0);
+
     // total image area
     float AREA = background.size().area();
     float denseQ = 0, denseM = 0, time;
@@ -339,12 +344,14 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
     frame1 = warpAndCrop(frame1, matrix);
     pthread_t t[8];
     subArgs arg[8];
+    clock_t ts, te;
 
     //divide background
     for ( int i = 0; i < x; i++ ){
         arg[i].background = background(Range(i*background.rows/x, (i+1)*background.rows/x), Range(0, background.cols));
     }
-    
+    float m = 0;
+
     while (true) {
 
         //read Frame 2
@@ -366,14 +373,22 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
             arg[i].frame1 = frame1(Range(i*frame1.rows/x, (i+1)*frame1.rows/x), Range(0, frame1.cols));
             arg[i].frame2 = frame2(Range(i*frame2.rows/x, (i+1)*frame2.rows/x), Range(0, frame2.cols));
         }
+        
+
         for(int i = 0; i < x; i++)
         {
            pthread_create(&t[i], NULL, findDiffArea, (void*)(&arg[i]));
         }
+
+        ts = clock();
+
         for(int i = 0; i < x; i++)
         {
             pthread_join(t[i], (void**)&arg[i]);
         }
+        te = clock();
+        m += float(te-ts)/CLOCKS_PER_SEC;
+        
         float tempM = 0;
         for( int i = 0 ; i < x; i++){
             tempM += arg[i].areaM;
@@ -397,10 +412,12 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x) {
         //update frame1 to frame2 and loop back
         frame1 = frame2;
     }
+
+    cout<<m<<"\n";
 }
 
 void M5_temporalSplit(int x) {
-
+    
 }
 
 // main function
@@ -434,7 +451,6 @@ int main() {
     background = warpAndCrop(background, matrix);
     Size szbase = background.size();
 
-    video.set(CAP_PROP_POS_MSEC, 0);
 
     clock_t start, end;
     //Write in text-file time | denseQ | denseM | frame number(optional). useful for graphing.
