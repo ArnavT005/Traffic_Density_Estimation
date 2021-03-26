@@ -25,7 +25,7 @@ float u12, u22, u32, u42, u52;
 vector<float> e1, e2, e3, e4, e5;
 
 //Set testmi to true to test method i
-bool testbase = false, testm1 = false, testm2 = false, testm3 = false, testm4 = false, testm5 = true;
+bool testbase = true, testm1 = false, testm2 = false, testm3 = false, testm4 = false, testm5 = true;
 
 struct subArgs{
     Mat frame1;
@@ -381,8 +381,6 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x, ofst
     pthread_t t[8];
     subArgs arg[8];
     subArgs* args[8];
-    clock_t ts, te;
-    float m = 0;
     
     //divide background
     for ( int i = 0; i < x; i++ ){
@@ -390,7 +388,6 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x, ofst
     }
         
     while (true) {
-        ts = clock();
         //read Frame 2
         for (int i = 0; i < see_every_n_frame; i++) {
             video.read(frame2);
@@ -402,10 +399,7 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x, ofst
             break;
         }
         
-        te = clock();
-        m += (float)(te - ts) / CLOCKS_PER_SEC;
         frame2 = warpAndCrop(frame2, matrix);
-        
         
         //Queue Density - subtract background
         //topleft = frame2(Range(0, frame2.rows/2), Range(0, frame2.cols/2));
@@ -452,7 +446,6 @@ void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x, ofst
         frame1 = frame2;
         
     }
-    cout << m << "\n";
 }
 
 void* M5(void* arg) {
@@ -463,24 +456,25 @@ void* M5(void* arg) {
     int start = ((struct m5*)arg)-> start;
     
     //start = start + (3 - start%3)%3;
-    if (start!=0){ start-=1; }
+    // MAGIC
+    //if (start!=0) { start-=1; }
     int end = ((struct m5*)arg)-> end;
     
     video.set(CAP_PROP_POS_FRAMES, start);
-    cout<<start<<" "<<end<<" ";
+    //cout<<start<<" "<<end<<" ";
 
     Mat frame1, frame2, thresh;
 
     // total image area
     float AREA = background.size().area();
     float denseQ = 0, denseM = 0, time;
-    int see_every_n_frame = 3, frame = start+1;
+    int see_every_n_frame = 3, frame = start + 1;
 
     //read Frame 1
     video.read(frame1);
     frame1 = warpAndCrop(frame1, matrix);
 
-    while (frame < end) {
+    while (frame <= end) {
 
         //read Frame 2
         for (int i = 0; i < see_every_n_frame; i++) {
@@ -489,7 +483,9 @@ void* M5(void* arg) {
         }
 
         //Video End
-        if (frame2.empty() || frame > end + 1) {
+        //MAGIC
+        //if (frame2.empty() || frame > end + 1) {
+        if (frame2.empty() || frame > end) {
             break;
         }
 
@@ -509,8 +505,10 @@ void* M5(void* arg) {
         denseQ = denseQ > denseM ? denseQ : denseM;
 
         // video is 15 FPS
-        if(start!=0){time = (float)(frame+1)/15; }
-        else{ time = (float)frame / 15; }
+        //MAGIC
+        //if(start!=0){time = (float)(frame+1)/15; }
+        //else{ time = (float)frame / 15;}
+        time = (float)frame / 15;
 
         file << time << "," << denseQ << "," << denseM << "\n";
 
@@ -560,6 +558,7 @@ int main() {
     cout<<"Starting Execution\n";
     string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
     //string vid_path = "trafficvideo.mp4";
+    cout<<"Video Path: "<<vid_path<<"\n";
     VideoCapture video(vid_path);
     
     Mat background, matrix;
@@ -589,6 +588,7 @@ int main() {
 
     //Write in text-file time | denseQ | denseM | frame number(optional). useful for graphing.
     if (testbase) {
+        cout<<"Running Baseline Tests\n";
         ofstream fbase("Baseline.txt");
         auto start = high_resolution_clock::now();
         baseline(video, background.clone(), matrix, fbase);
@@ -597,6 +597,7 @@ int main() {
         fbase.close();
     }
     if (testm1) {
+        cout<<"Running Method 1 - Subsampling\n";
         ofstream f1("M1_subSample.txt");
         auto start = high_resolution_clock::now();
         M1_subSample(video, background.clone(), matrix, p1, f1);
@@ -605,6 +606,7 @@ int main() {
         f1.close();
     }
     if (testm2) {
+        cout<<"Running Method 2 - Spare v/s Dense optical flow\n";
         ofstream f2("M2_sparseDense.txt");
         auto start = high_resolution_clock::now();
         M2_sparseDense(p2);
@@ -613,6 +615,7 @@ int main() {
         f2.close();
     }
     if (testm3) {
+        cout<<"Running Method 3 - Reduced Resolution\n";
         ofstream f3("M3_reduceResol.txt");
         auto start = high_resolution_clock::now();
         M3_reduceResol(video, background.clone(), matrix, p3, p4, f3);
@@ -621,6 +624,7 @@ int main() {
         f3.close();
     }
     if (testm4) {
+        cout<<"Running Method 4 - Spatial Split\n";
         ofstream f4("M4_spatialSplit.txt");
         auto start = high_resolution_clock::now();
         M4_spatialSplit(video, background.clone(), matrix, p5, f4);
@@ -629,6 +633,7 @@ int main() {
         f4.close();
     }
     if (testm5) {
+        cout<<"Running Method 4 - Temporal Split\n";
         ofstream f5("M5_temporalSplit.txt");
         auto start = high_resolution_clock::now();
         M5_temporalSplit(vid_path, background.clone(), matrix, p6, f5);
@@ -639,21 +644,24 @@ int main() {
 
     //Print utility report in text file. Print method name | parameter value | utility | time consumed in one line. used for debugging and changes.
     //Then after the above report print comma seperated utility, runtime for final graphing.
-    futil << "Baseline RunTime = " << rtbase << " secs\n" << "Baseline Resolution = " << szbase << "\n";
+    cout<<"Evaluating Utility\n";
+    if(testbase){
+        futil << "Baseline RunTime = " << rtbase << " secs\n" << "Baseline Resolution = " << szbase << "\n\n";
+    }
     ifstream fbase_in("Baseline.txt");
     if (testm1) {
         ifstream f1_in("M1_subSample.txt");
         e1 = error(fbase_in, f1_in, "M1_moveVsBase", "M1_queueVsBase", p1);
         u11 = 1 / (0.01 + e1[0]);
         u12 = 1 / (0.01 + e1[0]);
-        futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 << ".\n\tQueue Utility = " << u11 << ". Moving Utility = " << u12 << ". RunTime = " << rt1 << " secs\n";
+        futil << "Method 1: Sub-Sample - No. of frames to drop = " << p1 << ".\n\tQueue Utility = " << u11 << ". Moving Utility = " << u12 << ". RunTime = " << rt1 << " secs\n\n";
     }
     if (testm2) {
         ifstream f2_in("M2_sparseDense.txt");
         e2 = error(fbase_in, f2_in, "M2_moveVsBase", "M2_queueVsBase");
         u21 = 1 / (0.01 + e2[0]);
         u22 = 1 / (0.01 + e2[1]);
-        futil << "Method 2: Sparse/Dense Flow - Type = " << p2 << ".\n\tQueue Utility = " << u21 << ". Moving Utility = " << u22 << ". RunTime = " << rt2 << " secs\n";
+        futil << "Method 2: Sparse/Dense Flow - Type = " << p2 << ".\n\tQueue Utility = " << u21 << ". Moving Utility = " << u22 << ". RunTime = " << rt2 << " secs\n\n";
     }
     if (testm3) {
         ifstream f3_in("M3_reduceResol.txt");
@@ -661,7 +669,7 @@ int main() {
         u31 = 1 / (0.01 + e3[0]);
         u32 = 1 / (0.01 + e3[1]);
 
-        futil << "Method 3: Reduce Resolution - Resolution = " << p3 << "x" << p4 << ".\n\tQueue Utility = " << u31 << ". Moving Utility = " << u32 << ". RunTime = " << rt3 << " secs\n";
+        futil << "Method 3: Reduce Resolution - Resolution = " << p3 << "x" << p4 << ".\n\tQueue Utility = " << u31 << ". Moving Utility = " << u32 << ". RunTime = " << rt3 << " secs\n\n";
     }
     if (testm4) {
         ifstream f4_in("M4_spatialSplit.txt");
@@ -669,7 +677,7 @@ int main() {
         u41 = 1 / (0.01 + e4[0]);
         u42 = 1 / (0.01 + e4[1]);
 
-        futil << "Method 4: Spatial Split - No. of frame splits = " << p5 << ".\n\tQueue Utility = " << u41 << ". Moving Utility = " << u42 << ". RunTime = " << rt4 << " secs\n";
+        futil << "Method 4: Spatial Split - No. of frame splits = " << p5 << ".\n\tQueue Utility = " << u41 << ". Moving Utility = " << u42 << ". RunTime = " << rt4 << " secs\n\n";
     }
     if (testm5) {
         ifstream f5_in("M5_temporalSplit.txt");
