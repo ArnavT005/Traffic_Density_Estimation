@@ -597,7 +597,7 @@ int main() {
         fbase.close();
     }
     if (testm1) {
-        cout<<"Running Method 1 - Subsampling\n";
+        cout<<"Running Method 1 - Subsampling with parameter "<<p1<<"\n";
         ofstream f1("M1_subSample.txt");
         auto start = high_resolution_clock::now();
         M1_subSample(video, background.clone(), matrix, p1, f1);
@@ -606,7 +606,7 @@ int main() {
         f1.close();
     }
     if (testm2) {
-        cout<<"Running Method 2 - Spare v/s Dense optical flow\n";
+        cout<<"Running Method 2 - Spare v/s Dense optical flow with parameter "<<p2<<"\n";
         ofstream f2("M2_sparseDense.txt");
         auto start = high_resolution_clock::now();
         M2_sparseDense(p2);
@@ -615,7 +615,7 @@ int main() {
         f2.close();
     }
     if (testm3) {
-        cout<<"Running Method 3 - Reduced Resolution\n";
+        cout<<"Running Method 3 - Reduced Resolution with parameters "<<p3<<"x"<<p4<<"\n";
         ofstream f3("M3_reduceResol.txt");
         auto start = high_resolution_clock::now();
         M3_reduceResol(video, background.clone(), matrix, p3, p4, f3);
@@ -624,7 +624,7 @@ int main() {
         f3.close();
     }
     if (testm4) {
-        cout<<"Running Method 4 - Spatial Split\n";
+        cout<<"Running Method 4 - Spatial Split with parameter "<<p5<<"\n";
         ofstream f4("M4_spatialSplit.txt");
         auto start = high_resolution_clock::now();
         M4_spatialSplit(video, background.clone(), matrix, p5, f4);
@@ -633,7 +633,7 @@ int main() {
         f4.close();
     }
     if (testm5) {
-        cout<<"Running Method 4 - Temporal Split\n";
+        cout<<"Running Method 4 - Temporal Split with parameter "<<p6<<"\n";
         ofstream f5("M5_temporalSplit.txt");
         auto start = high_resolution_clock::now();
         M5_temporalSplit(vid_path, background.clone(), matrix, p6, f5);
