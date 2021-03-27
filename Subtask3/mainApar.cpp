@@ -16,7 +16,7 @@ ofstream futil("UtilityReport.txt", ios::app);
 float rtbase, rt1, rt2, rt3, rt4, rt5;
 
 //method parameters
-int p1 = 5, p2, p3 = 100, p4 = 200, p5 = 4, p6 = 8;
+int p1 = 5, p2, p3 = 100, p4 = 200, p5 = 4, p6 = 1;
 
 //method utilities
 float u11, u21, u31, u41, u51;
@@ -25,7 +25,7 @@ float u12, u22, u32, u42, u52;
 vector<float> e1, e2, e3, e4, e5;
 
 //Set testmi to true to test method i
-bool testbase = true, testm1 = false, testm2 = false, testm3 = false, testm4 = false, testm5 = true;
+bool testbase = false, testm1 = false, testm2 = false, testm3 = false, testm4 = false, testm5 = true;
 
 struct subArgs{
     Mat frame1;
@@ -457,11 +457,11 @@ void* M5(void* arg) {
     
     //start = start + (3 - start%3)%3;
     // MAGIC
-    //if (start!=0) { start-=1; }
+    if (start!=0) { start-=2; }
     int end = ((struct m5*)arg)-> end;
     
     video.set(CAP_PROP_POS_FRAMES, start);
-    //cout<<start<<" "<<end<<" ";
+    cout<<start<<" "<<end<<"\n";
 
     Mat frame1, frame2, thresh;
 
@@ -484,8 +484,8 @@ void* M5(void* arg) {
 
         //Video End
         //MAGIC
-        //if (frame2.empty() || frame > end + 1) {
-        if (frame2.empty() || frame > end) {
+        if (frame2.empty() || frame > end + 1) {
+        //if (frame2.empty() || frame > end) {
             break;
         }
 
@@ -506,9 +506,9 @@ void* M5(void* arg) {
 
         // video is 15 FPS
         //MAGIC
-        //if(start!=0){time = (float)(frame+1)/15; }
-        //else{ time = (float)frame / 15;}
-        time = (float)frame / 15;
+        if(start!=0){time = (float)(frame+2)/15; }
+        else{ time = (float)frame / 15;}
+        //time = (float)frame / 15;
 
         file << time << "," << denseQ << "," << denseM << "\n";
 
@@ -538,7 +538,8 @@ void M5_temporalSplit(string path, Mat background, Mat matrix, int x, ofstream &
         arg[i].end = end;
         pthread_create(&t[i], NULL, &M5, (void*)(&arg[i]));
         start = end;
-        end += diff;
+        end = ((i + 2) * frame_cnt) / x;
+        end = end + (3 - end % 3) % 3;
     }
     for(int i = 0; i < x; i++)
     {
@@ -556,8 +557,8 @@ void M5_temporalSplit(string path, Mat background, Mat matrix, int x, ofstream &
 // main function
 int main() {
     cout<<"Starting Execution\n";
-    string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
-    //string vid_path = "trafficvideo.mp4";
+    //string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
+    string vid_path = "trafficvideo.mp4";
     cout<<"Video Path: "<<vid_path<<"\n";
     VideoCapture video(vid_path);
     
