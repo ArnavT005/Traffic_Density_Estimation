@@ -1,12 +1,7 @@
-#include <opencv2/opencv.hpp>
-#include "densityEstimation.h"
-#include <fstream>
-#include <vector>
+void baseline(cv::VideoCapture video, cv::Mat background, cv::Mat matrix, ofstream &file) {
+    video.set(cv::CAP_PROP_POS_MSEC, 0);
 
-void baseline(VideoCapture video, Mat background, Mat matrix, ofstream &file) {
-    video.set(CAP_PROP_POS_MSEC, 0);
-
-    Mat frame1, frame2, thresh;
+    cv::Mat frame1, frame2, thresh;
 
     // total image area
     float AREA = background.size().area();
