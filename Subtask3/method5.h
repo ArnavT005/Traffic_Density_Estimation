@@ -1,11 +1,7 @@
-#include <pthread.h>
-#include <opencv2/opencv.hpp>
-#include "densityEstimation.h"
-
 struct m5{
-    VideoCapture video;
-    Mat background;
-    Mat matrix;
+    cv::VideoCapture video;
+    cv::Mat background;
+    cv::Mat matrix;
     string file;
     int start;
     int end;
@@ -14,9 +10,9 @@ struct m5{
 
 void* M5(void* arg) {
     m5* args = (m5*)arg;
-    VideoCapture video = args-> video;
-    Mat background = args-> background;
-    Mat matrix = args-> matrix;
+    cv::VideoCapture video = args-> video;
+    cv::Mat background = args-> background;
+    cv::Mat matrix = args-> matrix;
     ofstream file(args-> file);
     int start = args-> start;
     int magic = args -> magic_number;
@@ -26,10 +22,10 @@ void* M5(void* arg) {
     //if (start!=0) { start-=2; }
     start -= magic;
     
-    video.set(CAP_PROP_POS_FRAMES, start);
+    video.set(cv::CAP_PROP_POS_FRAMES, start);
     cout<<start<<" "<<end<<"\n";
 
-    Mat frame1, frame2, thresh;
+    cv::Mat frame1, frame2, thresh;
 
     // total image area
     float AREA = background.size().area();
@@ -85,13 +81,13 @@ void* M5(void* arg) {
     return NULL;
 }
 
-void M5_temporalSplit(string path, Mat background, Mat matrix, int x, ofstream &file) {
+void M5_temporalSplit(string path, cv::Mat background, cv::Mat matrix, int x, ofstream &file) {
     pthread_t t[8];
     m5 arg[8];
     ifstream f[8];
     vector<vector<int>> magicVector = { {0}, {0,1}, {0,2,2}, {0,2,1,2}, {0,2,1,1,2}, {0,1,2,1,2,0}, {0,1,2,1,1,1,0}, {0,2,2,2,1,0,2,1} };
-    VideoCapture temp(path);
-    int frame_cnt = temp.get(CAP_PROP_FRAME_COUNT);
+    cv::VideoCapture temp(path);
+    int frame_cnt = temp.get(cv::CAP_PROP_FRAME_COUNT);
     int start = 0, end = frame_cnt/x;
     end = end + (3-end%3)%3;
     file<<"Time,DenseQueue,DenseMove\n";
