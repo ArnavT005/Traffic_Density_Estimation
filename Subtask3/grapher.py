@@ -10,9 +10,17 @@ for INPUT_FILE in DENSITY_FILEs:
 
 for INPUT_FILE in UTILITY_FILEs:
     df = pd.read_csv(INPUT_FILE)
-    ax = df.plot.scatter(y = 'RunTime', x = 'QueueUtility')
-    df.apply(lambda r: ax.annotate(r['Parameter'].astype(str), (r.QueueUtility + 0.1, r.RunTime + 0.1)), axis=1)
-    plt.savefig(INPUT_FILE[:-4]+"Queue.jpg")
-    df.plot.scatter(y = 'RunTime', x = 'MovingUtility')
-    df.apply(lambda r: ax.annotate(r['Parameter'].astype(str), (r.QueueUtility + 0.1, r.RunTime + 0.1)), axis=1)
-    plt.savefig(INPUT_FILE[:-4]+"Moving.jpg")
+    if len(df.columns) == 4:
+        ax = df.plot.scatter(y = 'RunTime', x = 'QueueUtility')
+        df.apply(lambda r: ax.annotate(r['Parameter'].astype(str), (r.QueueUtility + 0.1, r.RunTime + 0.1)), axis=1)
+        plt.savefig(INPUT_FILE[:-4]+"Queue.jpg")
+        df.plot.scatter(y = 'RunTime', x = 'MovingUtility')
+        df.apply(lambda r: ax.annotate(r['Parameter'].astype(str), (r.QueueUtility + 0.1, r.RunTime + 0.1)), axis=1)
+        plt.savefig(INPUT_FILE[:-4]+"Moving.jpg")
+    if len(df.columns) == 5:
+        ax = df.plot.scatter(y = 'RunTime', x = 'QueueUtility')
+        df.apply(lambda r: ax.annotate("("+r['ParameterX'].astype(str)+","+r['ParameterY'].astype(str)+")", (r.QueueUtility + 0.1, r.RunTime + 0.1)), axis=1)
+        plt.savefig(INPUT_FILE[:-4]+"Queue.jpg")
+        df.plot.scatter(y = 'RunTime', x = 'MovingUtility')
+        df.apply(lambda r: ax.annotate("("+r['ParameterX'].astype(str)+","+r['ParameterY'].astype(str)+")", (r.QueueUtility + 0.1, r.RunTime + 0.1)), axis=1)
+        plt.savefig(INPUT_FILE[:-4]+"Moving.jpg")
