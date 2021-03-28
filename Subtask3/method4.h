@@ -1,44 +1,40 @@
-#include <pthread.h>
-#include <opencv2/opencv.hpp>
-#include "densityEstimation.h"
-
 struct m4{
-    Mat frame1;
-    Mat frame2;
-    Mat background;
+    cv::Mat frame1;
+    cv::Mat frame2;
+    cv::Mat background;
     float areaM, areaQ;
 };
 
 void* findDiffArea(void* arg) {
     m4* args = (m4*) arg;
-    Mat diff, thresh, frame1, frame2, background;
+    cv::Mat diff, thresh, frame1, frame2, background;
     frame1 = args-> frame1.clone();
     frame2 = args-> frame2.clone();
     background = args -> background.clone();
 
     //grayscale
-    cvtColor(frame1, frame1, COLOR_BGR2GRAY);
-    GaussianBlur(frame1, frame1, Size(5, 5), 0);
+    cv::cvtColor(frame1, frame1, cv::COLOR_BGR2GRAY);
+    cv::GaussianBlur(frame1, frame1, cv::Size(5, 5), 0);
 
     //grayscale
-    cvtColor(frame2, frame2, COLOR_BGR2GRAY);
-    GaussianBlur(frame2, frame2, Size(5, 5), 0);
+    cv::cvtColor(frame2, frame2, cv::COLOR_BGR2GRAY);
+    cv::GaussianBlur(frame2, frame2, cv::Size(5, 5), 0);
 
-    cvtColor(background, background, COLOR_BGR2GRAY);
-    GaussianBlur(background, background, Size(5, 5), 0);
+    cv::cvtColor(background, background, cv::COLOR_BGR2GRAY);
+    cv::GaussianBlur(background, background, cv::Size(5, 5), 0);
 
     //absolute frame diff
-    absdiff(frame1, frame2, diff);
+    cv::absdiff(frame1, frame2, diff);
 
     //threshold
-    threshold(diff, thresh, 20, 255, THRESH_BINARY);
+    cv::threshold(diff, thresh, 20, 255, cv::THRESH_BINARY);
 
     // DILATE & ERODE
-    Mat kernel5x5 = getStructuringElement(MORPH_RECT, Size(5, 5));
-    Mat kernel21x21 = getStructuringElement(MORPH_RECT, Size(21, 21));
+    cv::Mat kernel5x5 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+    cv::Mat kernel21x21 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(21, 21));
 
-    erode(thresh, thresh, kernel5x5);
-    dilate(thresh, thresh, kernel21x21);
+    cv::erode(thresh, thresh, kernel5x5);
+    cv::dilate(thresh, thresh, kernel21x21);
     
     float area = 0;
     for (int i = 0; i < thresh.rows; i++) {
@@ -51,12 +47,12 @@ void* findDiffArea(void* arg) {
     args -> areaM = area;
 
     //absolute frame diff
-    absdiff(frame2, background, diff);
+    cv::absdiff(frame2, background, diff);
 
     //threshold
-    threshold(diff, thresh, 40, 255, THRESH_BINARY);
-    erode(thresh, thresh, kernel5x5);
-    dilate(thresh, thresh, kernel21x21);
+    cv::threshold(diff, thresh, 40, 255, cv::THRESH_BINARY);
+    cv::erode(thresh, thresh, kernel5x5);
+    cv::dilate(thresh, thresh, kernel21x21);
     
     area = 0;
     for (int i = 0; i < thresh.rows; i++) {
@@ -71,9 +67,9 @@ void* findDiffArea(void* arg) {
     return (void*) args;
 }
 
-void M4_spatialSplit(VideoCapture video, Mat background, Mat matrix, int x, ofstream &file) {
-    Mat frame1, frame2, thresh;
-    video.set(CAP_PROP_POS_MSEC, 0);
+void M4_spatialSplit(cv::VideoCapture video, cv::Mat background, cv::Mat matrix, int x, ofstream &file) {
+    cv::Mat frame1, frame2, thresh;
+    video.set(cv::CAP_PROP_POS_MSEC, 0);
 
     // total image area
     float AREA = background.size().area();
