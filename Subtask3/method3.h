@@ -1,13 +1,10 @@
-#include <opencv2/opencv.hpp>
-#include "densityEstimation.h"
+void M3_reduceResol(cv::VideoCapture video, cv::Mat background, cv::Mat matrix, int x, int y, ofstream &file) {
+    video.set(cv::CAP_PROP_POS_MSEC, 0);
 
-void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y, ofstream &file) {
-    video.set(CAP_PROP_POS_MSEC, 0);
-
-    Mat frame1, frame2, thresh;
+    cv::Mat frame1, frame2, thresh;
     
     // total image area
-    resize(background, background, Size(x, y));
+    cv::resize(background, background, cv::Size(x, y));
     float AREA = background.size().area();
     float denseQ = 0, denseM = 0, time;
     int see_every_n_frame = 3, frame = 1;
@@ -15,7 +12,7 @@ void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y
     //read Frame 1
     video.read(frame1);
     frame1 = warpAndCrop(frame1, matrix);
-    resize(frame1, frame1, Size(x, y));
+    cv::resize(frame1, frame1, cv::Size(x, y));
     file<<"Time,DenseQueue,DenseMove\n";
 
     while (true) {
@@ -32,7 +29,7 @@ void M3_reduceResol(VideoCapture video, Mat background, Mat matrix, int x, int y
         }
 
         frame2 = warpAndCrop(frame2, matrix);
-        resize(frame2, frame2, Size(x, y));
+        cv::resize(frame2, frame2, cv::Size(x, y));
 
         //Queue Density - subtract background
         thresh = subImg(background.clone(), frame2.clone(), 40);
