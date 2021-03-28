@@ -1,35 +1,33 @@
-#include <opencv2/opencv.hpp>
+cv::Mat subImg(cv::Mat frame1, cv::Mat frame2, int thr = 20) {
 
-Mat subImg(Mat frame1, Mat frame2, int thr = 20) {
-
-    Mat diff, thresh;
+    cv::Mat diff, thresh;
 
     //grayscale
-    cvtColor(frame1, frame1, COLOR_BGR2GRAY);
-    GaussianBlur(frame1, frame1, Size(5, 5), 0);
+    cv::cvtColor(frame1, frame1, cv::COLOR_BGR2GRAY);
+    cv::GaussianBlur(frame1, frame1, cv::Size(5, 5), 0);
 
     //grayscale
-    cvtColor(frame2, frame2, COLOR_BGR2GRAY);
-    GaussianBlur(frame2, frame2, Size(5, 5), 0);
+    cv::cvtColor(frame2, frame2, cv::COLOR_BGR2GRAY);
+    cv::GaussianBlur(frame2, frame2, cv::Size(5, 5), 0);
 
     //absolute frame diff
-    absdiff(frame1, frame2, diff);
+    cv::absdiff(frame1, frame2, diff);
 
     //threshold
-    threshold(diff, thresh, thr, 255, THRESH_BINARY);
+    cv::threshold(diff, thresh, thr, 255, cv::THRESH_BINARY);
 
     // DILATE & ERODE
-    Mat kernel5x5 = getStructuringElement(MORPH_RECT, Size(5, 5));
-    Mat kernel21x21 = getStructuringElement(MORPH_RECT, Size(21, 21));
+    cv::Mat kernel5x5 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+    cv::Mat kernel21x21 = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(21, 21));
 
-    erode(thresh, thresh, kernel5x5);
-    dilate(thresh, thresh, kernel21x21);
+    cv::erode(thresh, thresh, kernel5x5);
+    cv::dilate(thresh, thresh, kernel21x21);
 
     return thresh;
 
 }
 
-float findArea(Mat thresh) {
+float findArea(cv::Mat thresh) {
     float area = 0;
     for (int i = 0; i < thresh.rows; i++) {
         for (int j = 0; j < thresh.cols; j++) {
@@ -40,12 +38,12 @@ float findArea(Mat thresh) {
     return area;
 }
 
-Mat warpAndCrop(Mat image, Mat matrix) {
-    Size size = image.size();
-    Mat transformed_image, cropped_image;
+cv::Mat warpAndCrop(cv::Mat image, cv::Mat matrix) {
+    cv::Size size = image.size();
+    cv::Mat transformed_image, cropped_image;
     //warp image using matrix
-    warpPerspective(image, transformed_image, matrix, size);
+    cv::warpPerspective(image, transformed_image, matrix, size);
     //crop using preselected points
-    cropped_image = transformed_image(Range(52, 831), Range(472, 801));
+    cropped_image = transformed_image(cv::Range(52, 831), cv::Range(472, 801));
     return cropped_image;
 }
