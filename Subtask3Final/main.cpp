@@ -9,7 +9,7 @@
 
 //____________________________________________________________________________________________
 
-string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
+string vid_path = "trafficvideo.mp4";
 //string vid_path = "trafficvideo.mp4";
 
 bool testbase = false; int method_number = -1;
@@ -46,14 +46,14 @@ bool isInteger(string str) {
 
 void invalidargs(){
     cout << "ERROR: Incorrect arguments provided. \n";
-    cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS>\n";
+    cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [AVG]\n";
     cout << "Refer to README.md for more details. \n\n";
 }
 
 // main function
 int main(int argc, char** argv) {
     cout<<"Starting Execution\n\n";
-    if (argc > 5 || argc < 3) {
+    if (argc > 6 || argc < 3) {
         invalidargs();
         return 0;
     }
@@ -75,35 +75,104 @@ int main(int argc, char** argv) {
     }
     else{
         cout << "ERROR: Invalid Method number.\n";
-        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS>\n";
+        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [AVG]\n";
         cout << "Refer to README.md for more details. \n\n";
         return 0;
     }
     
     if(method_number==0){
-        if(argc!=3) { invalidargs(); return 0;}
+        if(argc!=3 && argc != 4) { invalidargs(); return 0;}
         testbase = true;
+        if(argc == 4){
+            if(isInteger(argv[3])) {
+                runTime_avgOver = stoi(argv[3]);
+            }    
+            else {
+                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "Refer to README.md for more details. \n\n";
+            }
+        }
     }
     if(method_number==1){
-        if( argc!=4 || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
+        if( (argc!=4 && argc!=5) || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
+        if(stoi(argv[3]) > 5736) { 
+            cout << "CONSTRAINT: Parameter is constrained to be less than or equal to 5736.\n";
+            cout << "Enter a suitable number. Program terminating!\n\n";
+            return 0;    
+        }
         p1.push_back(stoi(argv[3]));
+        if(argc == 5){
+            if(isInteger(argv[4])) {
+                runTime_avgOver = stoi(argv[4]);
+            }    
+            else {
+                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "Refer to README.md for more details. \n\n";
+            }
+        }
     }
     if(method_number==2){
-        if(argc!=3) { invalidargs(); return 0;}
+        if(argc!=3 && argc != 4) { invalidargs(); return 0;}
         p2.push_back(0);
+        if(argc == 4){
+            if(isInteger(argv[3])) {
+                runTime_avgOver = stoi(argv[3]);
+            }    
+            else {
+                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "Refer to README.md for more details. \n\n";
+            }
+        }
     }
     if(method_number==3){
-        if(argc!=5 || !isInteger(argv[3]) || stoi(argv[3])<=0 || !isInteger(argv[4]) || stoi(argv[4])<=0) { invalidargs(); return 0;}
+        if( (argc!=5 && argc != 6) || !isInteger(argv[3]) || stoi(argv[3])<=0 || !isInteger(argv[4]) || stoi(argv[4])<=0) { invalidargs(); return 0;}
         vector<int> temp = {stoi(argv[3]), stoi(argv[4])};
         p3p4.push_back(temp);
+        if(argc == 6){
+            if(isInteger(argv[5])) {
+                runTime_avgOver = stoi(argv[5]);
+            }    
+            else {
+                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "Refer to README.md for more details. \n\n";
+            }
+        }
     }
     if(method_number==4){
-        if(argc!=4 || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
+        if((argc!=4 && argc != 5)|| !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
+        if(stoi(argv[3]) > 16) { 
+            cout << "CONSTRAINT: Number of pthreads is constrained to be less than or equal to 16.\n";
+            cout << "Enter a suitable number. Program terminating\n\n";
+            return 0;    
+        }
         p5.push_back(stoi(argv[3]));
+        if(argc == 5){
+            if(isInteger(argv[4])) {
+                runTime_avgOver = stoi(argv[4]);
+            }    
+            else {
+                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "Refer to README.md for more details. \n\n";
+            }
+        }
     }
     if(method_number==5){
-        if(argc!=4 || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
+        if((argc!=4 && argc != 5) || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
+        if(stoi(argv[3]) > 16) { 
+            cout << "CONSTRAINT: Number of pthreads is constrained to be less than or equal to 16.\n";
+            cout << "Enter a suitable number. Program terminating!\n\n";
+            return 0;    
+        }
         p6.push_back(stoi(argv[3]));
+        if(argc == 5){
+            if(isInteger(argv[4])) {
+                runTime_avgOver = stoi(argv[4]);
+            }    
+            else {
+                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "Refer to README.md for more details. \n\n";
+            }
+        }
     }
                 
     

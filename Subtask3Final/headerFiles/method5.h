@@ -17,13 +17,9 @@ void* M5(void* arg) {
     int start = args-> start;
     int magic = args -> magic_number;
     int end = args -> end;
-    //start = start + (3 - start%3)%3;
-    // MAGIC
-    //if (start!=0) { start-=2; }
     start -= magic;
     
     video.set(cv::CAP_PROP_POS_FRAMES, start);
-    //cout<<start<<" "<<end<<"\n";
 
     cv::Mat frame1, frame2, thresh;
 
@@ -45,9 +41,7 @@ void* M5(void* arg) {
         }
 
         //Video End
-        //MAGIC
         if (frame2.empty() || frame > end + 1) {
-        //if (frame2.empty() || frame > end) {
             break;
         }
 
@@ -68,8 +62,6 @@ void* M5(void* arg) {
 
         // video is 15 FPS
         //MAGIC
-        //if(start!=0){time = (float)(frame+2)/15; }
-        //else{ time = (float)frame / 15;}
         time = (float)(frame+magic) / 15;
 
         file << time << "," << denseQ << "," << denseM << "\n";
@@ -85,7 +77,11 @@ void M5_temporalSplit(string path, cv::Mat background, cv::Mat matrix, int x, of
     pthread_t t[16];
     m5 arg[16];
     ifstream f[16];
-    vector<vector<int>> magicVector = { {0}, {0,1}, {0,2,2}, {0,2,1,2}, {0,2,1,1,2}, {0,1,2,1,2,0}, {0,1,2,1,1,1,0}, {0,2,2,2,1,0,2,1}, {0,2,2,2,2,1,2,2,1}, {0,2,2,2,1,1,1,2,2,1},{0,2,2,2,2,2,1,0,1,2,1},{0,2,1,2,2,1,1,1,2,2,0,1},{0,2,1,2,2,2,2,1,0,2,2,0,2},{0,2,1,2,2,2,1,1,1,0,1,2,0,2},{0,2,2,2,2,2,1,2,1,1,2,1,2,0,2},{0,2,2,2,2,2,2,1,1,1,0,2,2,2,1,2} };
+    vector<vector<int>> magicVector = { {0}, {0,1}, {0,2,2}, {0,2,1,2}, {0,2,1,1,2}, {0,1,2,1,2,0}, 
+                                        {0,1,2,1,1,1,0}, {0,2,2,2,1,0,2,1}, {0,2,2,2,2,1,2,2,1}, {0,2,2,2,1,1,1,2,2,1},
+                                        {0,2,2,2,2,2,1,0,1,2,1},{0,2,1,2,2,1,1,1,2,2,0,1},{0,2,1,2,2,2,2,1,0,2,2,0,2},
+                                        {0,2,1,2,2,2,1,1,1,0,1,2,0,2},{0,2,2,2,2,2,1,2,1,1,2,1,2,0,2},
+                                        {0,2,2,2,2,2,2,1,1,1,0,2,2,2,1,2} };
     cv::VideoCapture temp(path);
     int frame_cnt = temp.get(cv::CAP_PROP_FRAME_COUNT);
     int start = 0, end = frame_cnt/x;
