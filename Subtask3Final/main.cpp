@@ -9,7 +9,7 @@
 
 //____________________________________________________________________________________________
 
-string vid_path = "trafficvideo.mp4";
+string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
 //string vid_path = "trafficvideo.mp4";
 
 bool testbase = false; int method_number = -1;
@@ -270,7 +270,7 @@ int main(int argc, char** argv) {
         }
         else {
             fgraph.open("UtilityVsRuntime.csv", ios::app);
-            fgraph<<"Parameter,Queue Utility,Moving Utility,Runtime\n";
+            fgraph<<"Parameter,Moving Utility,Runtime\n";
         }
         for(int j = 0; j < p2.size(); j++){
             ifstream fbase_in("Baseline.csv"); rt2 = 0;
@@ -293,7 +293,7 @@ int main(int argc, char** argv) {
             u21 = 10 / (0.1 + e2[0]);
             u22 = 10 / (0.1 + e2[1]);
             futil << "Method 2: Dense Optical Flow" << "\nMoving Utility = " << u22 << ". RunTime = " << rt2 << " secs\n\n";
-            fgraph<<p2[j]<<","<<u21<<","<<u22<<","<<rt2<<"\n";
+            fgraph<<p2[j]<<","<<u22<<","<<rt2<<"\n";
             cout<<"Finished Task: "<<j+1<<"/"<<p2.size()<<"\n\n";
         }fgraph.close();
     }
