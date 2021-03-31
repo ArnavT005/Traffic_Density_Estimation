@@ -30,24 +30,24 @@ void M2_sparseDense(VideoCapture video, Mat background, Mat matrix, int x, ofstr
 
             Mat opt_flow(frame1.size(), CV_32FC2);
 
-            calcOpticalFlowFarneback(frame1, frame2, flow, 0.5, 3, 15, 3, 7, 1.5, 0);
+            calcOpticalFlowFarneback(frame1, frame2, opt_flow, 0.5, 3, 15, 3, 7, 1.5, 0);
 
             Mat realImg[2];
-            split(flow, realImg);
+            split(opt_flow, realImg);
 
             Mat vec_mag, vec_ang, magn_norm;
             cartToPolar(realImg[0], realImg[1], vec_mag, vec_ang, true);
             normalize(vec_mag, magn_norm, 0.0, 1.0, NORM_MINMAX);
-            angle *= (1.f/510.f);
+            vec_ang *= (1.f/510.f);
 
             Mat hsv_parts[3], hsv, hsv_scaled, bgr;
-            hsv_parts[0] = angle; // hue
-            hsv_parts[1] = Mat::ones(angle.size(), CV_32F); // saturation
+            hsv_parts[0] = vec_ang; // hue
+            hsv_parts[1] = Mat::ones(vec_ang.size(), CV_32F); // saturation
             hsv_parts[2] = magn_norm; // value
             merge(hsv_parts, 3, hsv);
             hsv.convertTo(hsv_scaled, CV_8U, 255.0);
 
-            cvtColor(hsv8, bgr, COLOR_HSV2BGR);
+            cvtColor(hsv_scaled, bgr, COLOR_HSV2BGR);
             cvtColor(bgr, bgr, COLOR_BGR2GRAY);
 
             threshold(bgr, bgr, 15, 255, THRESH_BINARY);
