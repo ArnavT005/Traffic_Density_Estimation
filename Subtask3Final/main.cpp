@@ -12,12 +12,12 @@
 string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
 //string vid_path = "trafficvideo.mp4";
 
-bool testbase = false; int method_number = 2;
-int runTime_avgOver = 1, sleep_time = 0;
+bool testbase = false; int method_number = -1;
+int runTime_avgOver = 1, sleep_time = 10;
 
 //method parameters
-vector<int> p1 = {2,3,5,7,9,11,13,15}, p2 = {0}, p5 = {10}, p6 = {1};
-vector<vector<int>> p3p4 = {{395,935},{329,779},{165,779},{329,390},{165,390},{82,195},{66,156}};
+vector<int> p1 = {}, p2 = {}, p5 = {}, p6 = {};
+vector<vector<int>> p3p4 = {};
 
 //____________________________________________________________________________________________
 
@@ -35,11 +35,79 @@ vector<float> e1, e2, e3, e4, e5;
 
 //____________________________________________________________________________________________
 
+bool isInteger(string str) {
+    int len = str.length();
+    for (int i = 0; i < len; i++) {
+        if (str.at(i) < '0' || str.at(i) > '9')
+            return false;
+    }
+    return true;
+}
+
+void invalidargs(){
+    cout << "ERROR: Incorrect arguments provided. \n";
+    cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS>\n";
+    cout << "Refer to README.md for more details. \n\n";
+}
+
 // main function
-int main() {
+int main(int argc, char** argv) {
     cout<<"Starting Execution\n\n";
-    cout<<"Video Path: "<<vid_path<<"\n\n";
+    if (argc > 5 || argc < 3) {
+        invalidargs();
+        return 0;
+    }
+    
+    vid_path = argv[1];
     VideoCapture video(vid_path);
+    
+    if (!video.isOpened()) {
+        // unable to load video
+        cout << "ERROR: Unable to load video. Program terminating!\n";
+        cout << "Please check if the video path provided is valid or not.\n";
+        cout << "Refer to README.md for details. \n\n";
+        // unsuccessful loading
+        return 0;
+    }
+    
+    if(isInteger(argv[2]) && stoi(argv[2])>=0 && stoi(argv[2])<=5){
+        method_number = stoi(argv[2]);
+    }
+    else{
+        cout << "ERROR: Invalid Method number.\n";
+        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS>\n";
+        cout << "Refer to README.md for more details. \n\n";
+        return 0;
+    }
+    
+    if(method_number==0){
+        if(argc!=3) { invalidargs(); return 0;}
+        testbase = true;
+    }
+    if(method_number==1){
+        if( argc!=4 || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
+        p1.push_back(stoi(argv[3]));
+    }
+    if(method_number==2){
+        if(argc!=3) { invalidargs(); return 0;}
+        p2.push_back(0);
+    }
+    if(method_number==3){
+        if(argc!=5 || !isInteger(argv[3]) || stoi(argv[3])<=0 || !isInteger(argv[4]) || stoi(argv[4])<=0) { invalidargs(); return 0;}
+        vector<int> temp = {stoi(argv[3]), stoi(argv[4])};
+        p3p4.push_back(temp);
+    }
+    if(method_number==4){
+        if(argc!=4 || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
+        p5.push_back(stoi(argv[3]));
+    }
+    if(method_number==5){
+        if(argc!=4 || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
+        p6.push_back(stoi(argv[3]));
+    }
+                
+    
+    cout<<"Video Path: "<<vid_path<<"\n\n";
     
     Mat background, matrix;
     vector<Point2f> source_points, trnsfrm_points;
