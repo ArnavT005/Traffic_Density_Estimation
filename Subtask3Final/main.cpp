@@ -46,7 +46,7 @@ bool isInteger(string str) {
 
 void invalidargs(){
     cout << "ERROR: Incorrect arguments provided. \n";
-    cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [AVG]\n";
+    cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [<AVG_OVER>]\n";
     cout << "Refer to README.md for more details. \n\n";
 }
 
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     }
     else{
         cout << "ERROR: Invalid Method number.\n";
-        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [AVG]\n";
+        cout << "Please pass in arguments as:- <EXECUTABLE_FILE> <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [<AVG_OVER>]\n";
         cout << "Refer to README.md for more details. \n\n";
         return 0;
     }
@@ -84,11 +84,11 @@ int main(int argc, char** argv) {
         if(argc!=3 && argc != 4) { invalidargs(); return 0;}
         testbase = true;
         if(argc == 4){
-            if(isInteger(argv[3])) {
+            if(isInteger(argv[3]) && stoi(argv[3]) > 0) {
                 runTime_avgOver = stoi(argv[3]);
             }    
             else {
-                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
             }
         }
@@ -102,11 +102,11 @@ int main(int argc, char** argv) {
         }
         p1.push_back(stoi(argv[3]));
         if(argc == 5){
-            if(isInteger(argv[4])) {
+            if(isInteger(argv[4]) && stoi(argv[4]) > 0) {
                 runTime_avgOver = stoi(argv[4]);
             }    
             else {
-                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
             }
         }
@@ -115,11 +115,11 @@ int main(int argc, char** argv) {
         if(argc!=3 && argc != 4) { invalidargs(); return 0;}
         p2.push_back(0);
         if(argc == 4){
-            if(isInteger(argv[3])) {
+            if(isInteger(argv[3]) && stoi(argv[3]) > 0) {
                 runTime_avgOver = stoi(argv[3]);
             }    
             else {
-                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
             }
         }
@@ -129,11 +129,11 @@ int main(int argc, char** argv) {
         vector<int> temp = {stoi(argv[3]), stoi(argv[4])};
         p3p4.push_back(temp);
         if(argc == 6){
-            if(isInteger(argv[5])) {
+            if(isInteger(argv[5]) && stoi(argv[5]) > 0) {
                 runTime_avgOver = stoi(argv[5]);
             }    
             else {
-                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
             }
         }
@@ -147,11 +147,11 @@ int main(int argc, char** argv) {
         }
         p5.push_back(stoi(argv[3]));
         if(argc == 5){
-            if(isInteger(argv[4])) {
+            if(isInteger(argv[4]) && stoi(argv[4]) > 0) {
                 runTime_avgOver = stoi(argv[4]);
             }    
             else {
-                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
             }
         }
@@ -165,11 +165,11 @@ int main(int argc, char** argv) {
         }
         p6.push_back(stoi(argv[3]));
         if(argc == 5){
-            if(isInteger(argv[4])) {
+            if(isInteger(argv[4]) && stoi(argv[4]) > 0) {
                 runTime_avgOver = stoi(argv[4]);
             }    
             else {
-                cout << "WARNING: Optional argument not a number. Ignored.\n";
+                cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
             }
         }
@@ -274,7 +274,7 @@ int main(int argc, char** argv) {
         }
         for(int j = 0; j < p2.size(); j++){
             ifstream fbase_in("Baseline.csv"); rt2 = 0;
-            cout<<"Running Method 2 - Spare v/s Dense optical flow with parameter "<<p2[j]<<"\n";
+            cout<<"Running Method 2 - Dense optical flow\n";
             for(int i = 0; i < runTime_avgOver; i++){
                 cout<<"Testing Number: "<<i+1<<"\n";
                 ofstream f2("M2_sparseDenseParam"+to_string(p2[j])+".csv");
@@ -292,7 +292,7 @@ int main(int argc, char** argv) {
             f2_in.close();     fbase_in.close();
             u21 = 10 / (0.1 + e2[0]);
             u22 = 10 / (0.1 + e2[1]);
-            futil << "Method 2: Sparse/Dense Flow - Type = " << p2[j] << ".\n\tQueue Utility = " << u21 << ". Moving Utility = " << u22 << ". RunTime = " << rt2 << " secs\n\n";
+            futil << "Method 2: Dense Optical Flow" << "\n\tQueue Utility = " << u21 << ". Moving Utility = " << u22 << ". RunTime = " << rt2 << " secs\n\n";
             fgraph<<p2[j]<<","<<u21<<","<<u22<<","<<rt2<<"\n";
             cout<<"Finished Task: "<<j+1<<"/"<<p2.size()<<"\n\n";
         }fgraph.close();
