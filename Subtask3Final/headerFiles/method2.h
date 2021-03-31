@@ -1,8 +1,8 @@
 void M2_sparseDense(VideoCapture video, Mat background, Mat matrix, int x, ofstream &file) {
     video.set(cv::CAP_PROP_POS_MSEC, 0);
-    Mat frame1, frame2, thresh;
+    Mat frame1, frame2;
     float AREA = background.size().area();
-    float denseQ = 0, denseM = 0, time;
+    float denseM = 0, time;
     int see_every_n_frame = 3, frame = 1;
 
     //read Frame 1
@@ -25,9 +25,6 @@ void M2_sparseDense(VideoCapture video, Mat background, Mat matrix, int x, ofstr
             }
 
             frame2 = warpAndCrop(frame2, matrix);
-
-            thresh = subImg(background.clone(), frame2.clone(), 40);
-            denseQ = findArea(thresh) / AREA;
 
             cvtColor(frame2, frame2, COLOR_BGR2GRAY);
 
@@ -66,7 +63,7 @@ void M2_sparseDense(VideoCapture video, Mat background, Mat matrix, int x, ofstr
             // video is 15 FPS
             time = (float)frame / 15;
 
-            file << time << "," << denseQ << "," << denseM << "\n";
+            file << time << "," << 0.0 << "," << denseM << "\n";
 
             //update frame1 to frame2 and loop back
             frame1 = frame2;

@@ -292,7 +292,7 @@ int main(int argc, char** argv) {
             f2_in.close();     fbase_in.close();
             u21 = 10 / (0.1 + e2[0]);
             u22 = 10 / (0.1 + e2[1]);
-            futil << "Method 2: Dense Optical Flow" << "\n\tQueue Utility = " << u21 << ". Moving Utility = " << u22 << ". RunTime = " << rt2 << " secs\n\n";
+            futil << "Method 2: Dense Optical Flow" << "\nMoving Utility = " << u22 << ". RunTime = " << rt2 << " secs\n\n";
             fgraph<<p2[j]<<","<<u21<<","<<u22<<","<<rt2<<"\n";
             cout<<"Finished Task: "<<j+1<<"/"<<p2.size()<<"\n\n";
         }fgraph.close();
