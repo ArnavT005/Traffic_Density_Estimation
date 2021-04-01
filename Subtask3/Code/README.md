@@ -28,9 +28,10 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
   - <METHOD_PARAMETERS>  
      These are basically the required parameters, and the number of such
      parameters depend on <METHOD_NUMBER>. Parameter constraints:  
-     - 1: (x <= 5736)  
-     - 4: (n <= 16)  
-     - 5: (n <= 16)  
+     - 1: (x is a positive integer) and (x <= 5736)
+     - 3: (A is a positive integer) and (B is a positive integer)  
+     - 4: (n is a positive integer) and (n <= 16)  
+     - 5: (n is a positive integer) and (n <= 16)  
     This argument is mandatory if required, and the parameter constraints must
     be followed.  
   - <AVG_OVER>   
