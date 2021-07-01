@@ -7,8 +7,7 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - Make sure that both - makefile and main.cpp are present in the directory
 - run the command "make" or "make all" (excluding quotes) on the terminal.
   This will compile the C++ code and create the executable file, i.e. main
-- Now execute the file formed using the following format:
-- ```./main <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [<AVG_OVER>]```
+- Now execute the file formed using the following format: `./main <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [<AVG_OVER>]`
 
 - Notation used:
   - <VID_PATH>:
@@ -41,8 +40,7 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
      be a positive integer. If the constraints are not met, default value of 1 is
      used.  
 
-Note: Additional/unnecessary command line arguments will generate error.       
+> Note: Additional/unnecessary command line arguments will generate error.       
 
 ---
-
 ---
