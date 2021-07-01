@@ -1,16 +1,15 @@
-# Task 1: Camera angle correction and Image processing 
+# Camera angle correction and Image processing 
 
 ---
+
 INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - Open terminal and change to the directory containing the code files
 - Make sure that both - makefile and main.cpp are present in the directory
 - run the command "make" or "make all" (excluding quotes) on the terminal.
   This will compile the C++ code and create the executable file, i.e. main
-- Now execute the file formed using the following format:
-- ./main <IMG1_PATH> <IMG2_PATH> [<SAME_POINTS>{0,1}]
-                                                  __(order is important)__
+- Now execute the file formed using the following format: `./main <IMG1_PATH> <IMG2_PATH> [<SAME_POINTS>{0,1}]`
 - Notation used:
-  - <IMG1_PATH>, <IMG2_PATH>: T
+  - <IMG1_PATH>, <IMG2_PATH>:
      These are the absolute/relative paths of the images that need to be 
      transformed and cropped. Both the arguments are mandatory.
      For assignment purpose, preferable choice is:
@@ -25,13 +24,12 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
      - 1: Indicates that the same set of points should be used for both images
      - 0: Indicates individual selection of points. This is also the default
         value.
-Note: any value other than 0 or 1 is ignored and the program treats it as
-      the default (i.e. 0)
-Note: any argument other than the ones described above is ignored by the
-      program
+> Note: any value other than 0 or 1 is ignored and the program treats it as
+      the default (i.e. 0)  
+> Note: any argument other than the ones described above is ignored by the
+      program  
 ---
 
----
 INSTRUCTIONS TO GET PROPER TRANSFORMED AND CROPPED IMAGES:
 - Make sure that all the image paths are provided as command line arguments.
 - Make sure that the file paths are valid.
@@ -52,7 +50,6 @@ INSTRUCTIONS TO GET PROPER TRANSFORMED AND CROPPED IMAGES:
 	- Cropped_Image_2.jpg
 ---	  
 	   
----
 ADDITIONAL FEATURES:
 - Provided an optional command line argument, that can used to prevent selecting
   the same set of points again. [<SAME_POINTS>{0,1}]
@@ -62,4 +59,6 @@ ADDITIONAL FEATURES:
   anywhere on the image. The last selected point gets de-selected on a right-click.
 - Deselection is represented by a black dot (circle) that is drawn inside the 
   corresponding white circle. This can later be over-drawn by a white-selection.
-----------------------------------------------------------------------------------
+  
+---
+---
