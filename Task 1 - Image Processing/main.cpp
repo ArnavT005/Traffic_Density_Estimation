@@ -133,9 +133,9 @@ bool warpAndCrop(int count, String path, vector<Point2f> trnsfrm_points, Mat& ma
 
         //show and save transformed image
         imshow("Projected Frame", transformed_image);
-        imwrite("Transformed_Image_" + to_string(count) + ".jpg", transformed_image);
+        imwrite("output/Transformed_Image_" + to_string(count) + ".jpg", transformed_image);
 
-        //wait until any key is pressed 
+        //wait until any key is pressed
         waitKey(0);
 
         //close all windows on key press
@@ -144,9 +144,9 @@ bool warpAndCrop(int count, String path, vector<Point2f> trnsfrm_points, Mat& ma
         //show and save cropped image
         cropped_image = transformed_image(Range(52, 831), Range(472, 801));
         imshow("Cropped Frame", cropped_image);
-        imwrite("Cropped_Image_" + to_string(count) + ".jpg", cropped_image);
+        imwrite("output/Cropped_Image_" + to_string(count) + ".jpg", cropped_image);
 
-        //wait until any key is pressed 
+        //wait until any key is pressed
         waitKey(0);
 
         //close all windows on key press

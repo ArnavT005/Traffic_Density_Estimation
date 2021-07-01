@@ -1,4 +1,4 @@
-# Traffic density estimation: Subtask 2
+# Video processing and Traffic density estimation
 
 --------------------------------------------------------------------------------
 INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):

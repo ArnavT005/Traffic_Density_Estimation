@@ -1,6 +1,6 @@
-# Traffic density estimation: Subtask 1
+# Task 1: Camera angle correction and Image processing 
 
---------------------------------------------------------------------------------
+---
 INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - Open terminal and change to the directory containing the code files
 - Make sure that both - makefile and main.cpp are present in the directory
@@ -14,8 +14,8 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
      These are the absolute/relative paths of the images that need to be 
      transformed and cropped. Both the arguments are mandatory.
      For assignment purpose, preferable choice is:
-	- <IMG1_PATH>: empty.jpg
-	- <IMG2_PATH>: traffic.jpg
+	- <IMG1_PATH>: input/empty.jpg
+	- <IMG2_PATH>: input/traffic.jpg
 
   - <SAME_POINTS>:
      This argument is optional and it is used to specify whether or not 
@@ -29,9 +29,9 @@ Note: any value other than 0 or 1 is ignored and the program treats it as
       the default (i.e. 0)
 Note: any argument other than the ones described above is ignored by the
       program
---------------------------------------------------------------------------------
+---
 
---------------------------------------------------------------------------------
+---
 INSTRUCTIONS TO GET PROPER TRANSFORMED AND CROPPED IMAGES:
 - Make sure that all the image paths are provided as command line arguments.
 - Make sure that the file paths are valid.
@@ -45,14 +45,14 @@ INSTRUCTIONS TO GET PROPER TRANSFORMED AND CROPPED IMAGES:
 	- Top right corner of the road
 - Press any key after selecting the points to get transformed image. Press any key
   again to get the cropped image.
-- Transformed and cropped images are stored in the same directory as:
+- Transformed and cropped images are stored in the *output* folder as:
 	- Transformed_Image_1.jpg
 	- Transformed_Image_2.jpg
 	- Cropped_Image_1.jpg
 	- Cropped_Image_2.jpg
---------------------------------------------------------------------------------	  
+---	  
 	   
----------------------------------------------------------------------------------
+---
 ADDITIONAL FEATURES:
 - Provided an optional command line argument, that can used to prevent selecting
   the same set of points again. [<SAME_POINTS>{0,1}]
