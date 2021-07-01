@@ -9,8 +9,7 @@
 
 //____________________________________________________________________________________________
 
-string vid_path = "/Users/aparahuja/Desktop/trafficvideo.mp4";
-//string vid_path = "trafficvideo.mp4";
+string vid_path = "trafficvideo.mp4";
 
 bool testbase = false; int method_number = -1;
 int runTime_avgOver = 1, sleep_time = 10;
@@ -57,10 +56,10 @@ int main(int argc, char** argv) {
         invalidargs();
         return 0;
     }
-    
+
     vid_path = argv[1];
     VideoCapture video(vid_path);
-    
+
     if (!video.isOpened()) {
         // unable to load video
         cout << "ERROR: Unable to load video. Program terminating!\n";
@@ -69,7 +68,7 @@ int main(int argc, char** argv) {
         // unsuccessful loading
         return 0;
     }
-    
+
     if(isInteger(argv[2]) && stoi(argv[2])>=0 && stoi(argv[2])<=5){
         method_number = stoi(argv[2]);
     }
@@ -79,14 +78,14 @@ int main(int argc, char** argv) {
         cout << "Refer to README.md for more details. \n\n";
         return 0;
     }
-    
+
     if(method_number==0){
         if(argc!=3 && argc != 4) { invalidargs(); return 0;}
         testbase = true;
         if(argc == 4){
             if(isInteger(argv[3]) && stoi(argv[3]) > 0) {
                 runTime_avgOver = stoi(argv[3]);
-            }    
+            }
             else {
                 cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
@@ -95,16 +94,16 @@ int main(int argc, char** argv) {
     }
     if(method_number==1){
         if( (argc!=4 && argc!=5) || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
-        if(stoi(argv[3]) > 5736) { 
+        if(stoi(argv[3]) > 5736) {
             cout << "CONSTRAINT: Parameter is constrained to be less than or equal to 5736.\n";
             cout << "Enter a suitable number. Program terminating!\n\n";
-            return 0;    
+            return 0;
         }
         p1.push_back(stoi(argv[3]));
         if(argc == 5){
             if(isInteger(argv[4]) && stoi(argv[4]) > 0) {
                 runTime_avgOver = stoi(argv[4]);
-            }    
+            }
             else {
                 cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
@@ -117,7 +116,7 @@ int main(int argc, char** argv) {
         if(argc == 4){
             if(isInteger(argv[3]) && stoi(argv[3]) > 0) {
                 runTime_avgOver = stoi(argv[3]);
-            }    
+            }
             else {
                 cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
@@ -131,7 +130,7 @@ int main(int argc, char** argv) {
         if(argc == 6){
             if(isInteger(argv[5]) && stoi(argv[5]) > 0) {
                 runTime_avgOver = stoi(argv[5]);
-            }    
+            }
             else {
                 cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
@@ -140,16 +139,16 @@ int main(int argc, char** argv) {
     }
     if(method_number==4){
         if((argc!=4 && argc != 5)|| !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
-        if(stoi(argv[3]) > 16) { 
+        if(stoi(argv[3]) > 16) {
             cout << "CONSTRAINT: Number of pthreads is constrained to be less than or equal to 16.\n";
             cout << "Enter a suitable number. Program terminating\n\n";
-            return 0;    
+            return 0;
         }
         p5.push_back(stoi(argv[3]));
         if(argc == 5){
             if(isInteger(argv[4]) && stoi(argv[4]) > 0) {
                 runTime_avgOver = stoi(argv[4]);
-            }    
+            }
             else {
                 cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
@@ -158,29 +157,29 @@ int main(int argc, char** argv) {
     }
     if(method_number==5){
         if((argc!=4 && argc != 5) || !isInteger(argv[3]) || stoi(argv[3])<=0) { invalidargs(); return 0;}
-        if(stoi(argv[3]) > 16) { 
+        if(stoi(argv[3]) > 16) {
             cout << "CONSTRAINT: Number of pthreads is constrained to be less than or equal to 16.\n";
             cout << "Enter a suitable number. Program terminating!\n\n";
-            return 0;    
+            return 0;
         }
         p6.push_back(stoi(argv[3]));
         if(argc == 5){
             if(isInteger(argv[4]) && stoi(argv[4]) > 0) {
                 runTime_avgOver = stoi(argv[4]);
-            }    
+            }
             else {
                 cout << "WARNING: Optional argument not a valid number. Ignored.\n";
                 cout << "Refer to README.md for more details. \n\n";
             }
         }
     }
-                
-    
+
+
     cout<<"Video Path: "<<vid_path<<"\n\n";
-    
+
     Mat background, matrix;
     vector<Point2f> source_points, trnsfrm_points;
-    
+
     //preselected source points
     source_points.push_back(Point2f(980, 224));        //top left corner
     source_points.push_back(Point2f(418, 830));        //bottom left corner
@@ -202,7 +201,7 @@ int main(int argc, char** argv) {
     // baseline resolution = 329 x 779
     background = warpAndCrop(background, matrix);
     Size szbase = background.size();
-    
+
     ifstream filecheck1, filecheck;
     filecheck1.open("Baseline.csv");
     if(filecheck1) {} else {

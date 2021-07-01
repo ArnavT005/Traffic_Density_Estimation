@@ -1,16 +1,17 @@
-# Traffic density estimation: Subtask 3
+# Utility vs Runtime Trade-off Analysis
 
---------------------------------------------------------------------------------
+---
+
 INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - Open terminal and change to the directory containing the code files
 - Make sure that both - makefile and main.cpp are present in the directory
 - run the command "make" or "make all" (excluding quotes) on the terminal.
   This will compile the C++ code and create the executable file, i.e. main
 - Now execute the file formed using the following format:
-- ./main <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [<AVG_OVER>]
+- ```./main <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [<AVG_OVER>]```
 
 - Notation used:
-  - <VID_PATH>:   
+  - <VID_PATH>:
      This is the absolute/relative path of the video that needs to be 
      analysed for traffic density estimation. This argument is mandatory.
      For assignment purpose, preferable choice is:  
@@ -42,6 +43,6 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 
 Note: Additional/unnecessary command line arguments will generate error.       
 
---------------------------------------------------------------------------------
+---
 
---------------------------------------------------------------------------------
+---
