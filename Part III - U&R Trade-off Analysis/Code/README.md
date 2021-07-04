@@ -5,9 +5,9 @@
 INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - Open terminal and change to the directory containing the code files
 - Make sure that both - makefile and main.cpp are present in the directory
-- run the command "make" or "make all" (excluding quotes) on the terminal.
+- run the command `make` or `make all` (excluding quotes) on the terminal.
   This will compile the C++ code and create the executable file, i.e. main
-- Now execute the file formed using the following format: `./main <VID_PATH> <METHOD_NUMBER> <METHOD_PARAMETERS> [<AVG_OVER>]`
+- Now execute the file formed using the following format: `./main <VID_PATH> <METHOD_NUM> <METHOD_PARAM> [<AVG_OVER>]`
 
 - Notation used:
   - <VID_PATH>:
@@ -15,7 +15,7 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
      analysed for traffic density estimation. This argument is mandatory.
      For assignment purpose, preferable choice is:  
 	- <VID_PATH>: trafficvideo.mp4  
-  - <METHOD_NUMBER>:  
+  - <METHOD_NUM>:  
 	   This is basically the method number which needs to be run:  
      - 0: Baseline method (requires no parameter)  
      - 1: Sub-sampling frames (requires a single parameter)  
@@ -25,7 +25,7 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
      - 5: Temporal split (pthread) (requires a single parameter)  
      This argument is mandatory, and the value provided must be one of the
      six values mentioned above.  
-  - <METHOD_PARAMETERS>  
+  - <METHOD_PARAM>  
      These are basically the required parameters, and the number of such
      parameters depend on <METHOD_NUMBER>. Parameter constraints:  
      - 1: (x is a positive integer) and (x <= 5736)
