@@ -2,7 +2,7 @@
 
 ---
 
-INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
+### INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - Open terminal and change to the directory containing the code files
 - Make sure that both - makefile and main.cpp are present in the directory
 - run the command `make` or `make all` (excluding quotes) on the terminal.
