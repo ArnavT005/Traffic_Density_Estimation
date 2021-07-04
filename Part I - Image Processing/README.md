@@ -2,7 +2,7 @@
 
 ---
 
-INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
+### INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
 - Open terminal and change to the directory containing the code files
 - Make sure that both - makefile and main.cpp are present in the directory
 - run the command `make` or `make all` (excluding quotes) on the terminal.
@@ -30,7 +30,7 @@ INSTRUCTIONS TO EXECUTE SOURCE CODE FILE (main.cpp):
       program  
 ---
 
-INSTRUCTIONS TO GET PROPER TRANSFORMED AND CROPPED IMAGES:
+### INSTRUCTIONS TO GET PROPER TRANSFORMED AND CROPPED IMAGES:
 - Make sure that all the image paths are provided as command line arguments.
 - Make sure that the file paths are valid.
 - Select 4 points on the image, so that homography matrix can be determined. 
@@ -50,7 +50,7 @@ INSTRUCTIONS TO GET PROPER TRANSFORMED AND CROPPED IMAGES:
 	- Cropped_Image_2.jpg
 ---	  
 	   
-ADDITIONAL FEATURES:
+### ADDITIONAL FEATURES:
 - Provided an optional command line argument, that can used to prevent selecting
   the same set of points again. [<SAME_POINTS>{0,1}]
 - A white circle is drawn at the selected locations to indicate selection and to
